@@ -38,11 +38,11 @@ const tiles = [
   { icon: Users, label: "Booking", to: "/", accent: "gold" as const },
   { icon: Pill, label: "Pharmacy", to: "/", accent: "gold" as const },
   { icon: Syringe, label: "Vaccines", to: "/", accent: "gold" as const },
-  { icon: MessageCircle, label: "Chat", to: "/", accent: "gold" as const },
+  { icon: MessageCircle, label: "Chat", to: "/chat", accent: "gold" as const },
   { icon: Siren, label: "Emergency", to: "/", accent: "red" as const },
   { icon: FlaskConical, label: "Lab", to: "/", accent: "gold" as const },
   { icon: Video, label: "Telemedicine", to: "/", accent: "gold" as const },
-  { icon: Sparkles, label: "AI Triage", to: "/", accent: "gold" as const },
+  { icon: Sparkles, label: "AI Triage", to: "/chat", accent: "gold" as const },
 ];
 
 function Dashboard() {
