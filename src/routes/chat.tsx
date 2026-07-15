@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 import { Send, ChevronLeft, Siren } from "lucide-react";
 import { AnkhLogo } from "@/components/AnkhLogo";
 import { HieroFrame } from "@/components/HieroFrame";
+import { SymptomChecklist } from "@/components/SymptomChecklist";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({
@@ -21,17 +22,11 @@ export const Route = createFileRoute("/chat")({
   component: ChatPage,
 });
 
-const SUGGESTIONS = [
-  "I have a sore throat and mild fever for 2 days",
-  "My child has a rash on their arm",
-  "I keep getting headaches in the afternoon",
-  "What should I do for a minor burn?",
-];
-
 function ChatPage() {
   const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat" }), []);
   const { messages, sendMessage, status, error, stop } = useChat({ transport });
   const [input, setInput] = useState("");
+  const [intakeDone, setIntakeDone] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -85,27 +80,14 @@ function ChatPage() {
 
         {/* Transcript */}
         <div className="mt-5 space-y-4">
-          {messages.length === 0 && (
-            <div className="rounded-lg border border-[oklch(0.82_0.1_80)] bg-white/70 p-4">
-              <p className="font-display text-sm font-semibold text-[oklch(0.45_0.12_75)]">
-                Hello — I'm here to help you think through symptoms.
-              </p>
-              <p className="mt-1 font-body text-sm text-foreground/80">
-                Describe what you're feeling, when it started, and how severe it is. I'll ask a few
-                questions and suggest safe next steps.
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => submit(s)}
-                    className="rounded-full border border-[oklch(0.82_0.1_80)] bg-white px-3 py-1 text-[11px] text-foreground/80 shadow-sm hover:bg-[oklch(0.96_0.05_80)]"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
+          {!intakeDone && messages.length === 0 && (
+            <SymptomChecklist
+              disabled={isLoading}
+              onSubmit={(summary) => {
+                setIntakeDone(true);
+                submit(summary);
+              }}
+            />
           )}
 
           {messages.map((m) => {
