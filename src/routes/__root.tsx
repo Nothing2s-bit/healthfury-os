@@ -81,10 +81,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "HealthFury OS unifies booking, records, AI symptom scanning, tele-consult, pharmacy and emergency care into one health operating system." },
       { name: "author", content: "HealthFury" },
       { name: "theme-color", content: "#c9a24c" },
-      { property: "og:title", content: "HealthFury 2.0" },
-      { property: "og:description", content: "One operating system for every hospital and clinic." },
+      { property: "og:title", content: "HealthFury 2.0 — National Health Operating System" },
+      { property: "og:description", content: "HealthFury OS unifies booking, records, AI symptom scanning, tele-consult, pharmacy and emergency care into one health operating system." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "HealthFury 2.0 — National Health Operating System" },
+      { name: "twitter:description", content: "HealthFury OS unifies booking, records, AI symptom scanning, tele-consult, pharmacy and emergency care into one health operating system." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/JzOjn4KUhORL9Ab8nHFEHfVLyYs2/social-images/social-1784639618202-1000369081.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/JzOjn4KUhORL9Ab8nHFEHfVLyYs2/social-images/social-1784639618202-1000369081.webp" },
     ],
     links: [
       {
