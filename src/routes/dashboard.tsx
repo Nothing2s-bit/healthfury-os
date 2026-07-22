@@ -32,7 +32,7 @@ export const Route = createFileRoute("/dashboard")({
 
 const tiles = [
   { icon: UserRound, label: "Nurse", to: "/", accent: "red" as const },
-  { icon: Stethoscope, label: "Doctor", to: "/", accent: "red" as const },
+  { icon: Stethoscope, label: "Doctor", to: "/doctor", accent: "red" as const },
   { icon: ShieldCheck, label: "Admin", to: "/", accent: "gold" as const },
   { icon: Package, label: "Stock", to: "/", accent: "red" as const },
   { icon: Users, label: "Booking", to: "/", accent: "gold" as const },
