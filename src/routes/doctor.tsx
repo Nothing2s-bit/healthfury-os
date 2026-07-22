@@ -11,6 +11,7 @@ import {
   UserRound,
   Search,
 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { AnkhLogo } from "@/components/AnkhLogo";
 import { HieroFrame } from "@/components/HieroFrame";
 import { HealthTile } from "@/components/HealthTile";
@@ -46,7 +47,116 @@ const queue = [
   { name: "Kwame Mensah", reason: "Lab review", time: "10:20", status: "scheduled" },
 ];
 
+type Patient = {
+  mrn: string;
+  name: string;
+  age: number;
+  sex: "F" | "M";
+  condition: string;
+  status: "stable" | "monitor" | "critical";
+  vitals: { bp: string; hr: string; temp: string; spo2: string };
+  allergies: string[];
+  medications: string[];
+  lastVisit: string;
+  notes: string;
+};
+
+const patients: Patient[] = [
+  {
+    mrn: "HF-10231",
+    name: "Amara Okafor",
+    age: 34,
+    sex: "F",
+    condition: "Acute febrile illness",
+    status: "monitor",
+    vitals: { bp: "118/76", hr: "96", temp: "38.7°C", spo2: "98%" },
+    allergies: ["Penicillin"],
+    medications: ["Paracetamol 500mg"],
+    lastVisit: "18 Jul 2026",
+    notes: "Fever x3 days, no travel history. Malaria RDT pending.",
+  },
+  {
+    mrn: "HF-10874",
+    name: "Sipho Dlamini",
+    age: 58,
+    sex: "M",
+    condition: "Hypertension · Stage 2",
+    status: "monitor",
+    vitals: { bp: "158/98", hr: "82", temp: "36.6°C", spo2: "97%" },
+    allergies: [],
+    medications: ["Amlodipine 10mg", "HCTZ 25mg"],
+    lastVisit: "10 Jul 2026",
+    notes: "Follow-up for BP control. Reports adherence, mild ankle oedema.",
+  },
+  {
+    mrn: "HF-11290",
+    name: "Lerato Mokoena",
+    age: 27,
+    sex: "F",
+    condition: "Migraine w/ aura",
+    status: "stable",
+    vitals: { bp: "112/70", hr: "74", temp: "36.8°C", spo2: "99%" },
+    allergies: ["Sulfa"],
+    medications: ["Sumatriptan PRN"],
+    lastVisit: "02 Jul 2026",
+    notes: "Tele-consult requested. Frequency increased to 3x/week.",
+  },
+  {
+    mrn: "HF-11455",
+    name: "Kwame Mensah",
+    age: 46,
+    sex: "M",
+    condition: "Type 2 Diabetes",
+    status: "stable",
+    vitals: { bp: "124/80", hr: "78", temp: "36.5°C", spo2: "98%" },
+    allergies: [],
+    medications: ["Metformin 1g BD"],
+    lastVisit: "20 Jul 2026",
+    notes: "HbA1c 7.2% — improving. Review lipid panel today.",
+  },
+  {
+    mrn: "HF-11902",
+    name: "Naledi Khumalo",
+    age: 8,
+    sex: "F",
+    condition: "Asthma exacerbation",
+    status: "critical",
+    vitals: { bp: "104/64", hr: "128", temp: "37.4°C", spo2: "91%" },
+    allergies: ["Aspirin"],
+    medications: ["Salbutamol inhaler", "Fluticasone"],
+    lastVisit: "21 Jul 2026",
+    notes: "SpO2 dropping. Nebulise and reassess in 20 min.",
+  },
+  {
+    mrn: "HF-12044",
+    name: "Thabo Nkosi",
+    age: 41,
+    sex: "M",
+    condition: "Lower back pain",
+    status: "stable",
+    vitals: { bp: "126/82", hr: "76", temp: "36.7°C", spo2: "99%" },
+    allergies: [],
+    medications: ["Ibuprofen 400mg"],
+    lastVisit: "15 Jul 2026",
+    notes: "Mechanical LBP. Physio referral pending.",
+  },
+];
+
 function DoctorPortal() {
+  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<Patient | null>(null);
+
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return patients.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.mrn.toLowerCase().includes(q) ||
+        p.condition.toLowerCase().includes(q),
+    );
+  }, [query]);
+
   return (
     <HieroFrame className="pb-16">
       <div className="mx-auto max-w-md px-6 pt-6">
@@ -90,13 +200,60 @@ function DoctorPortal() {
         </div>
 
         {/* Search */}
-        <div className="mt-4 flex items-center gap-2 rounded-full border border-[oklch(0.82_0.1_80)] bg-white/80 px-4 py-2 shadow-sm">
-          <Search className="h-4 w-4 text-[oklch(0.6_0.15_65)]" />
-          <input
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-            placeholder="Search patient, MRN, or condition"
-          />
+        <div className="relative mt-4">
+          <div className="flex items-center gap-2 rounded-full border border-[oklch(0.82_0.1_80)] bg-white/80 px-4 py-2 shadow-sm">
+            <Search className="h-4 w-4 text-[oklch(0.6_0.15_65)]" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              placeholder="Search patient, MRN, or condition"
+            />
+            {query && (
+              <button
+                onClick={() => {
+                  setQuery("");
+                  setSelected(null);
+                }}
+                className="text-xs text-muted-foreground hover:text-[oklch(0.5_0.19_25)]"
+                aria-label="Clear search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {query && !selected && (
+            <ul className="absolute z-30 mt-1 max-h-64 w-full overflow-auto rounded-md border border-[oklch(0.85_0.08_82)] bg-white shadow-lg">
+              {results.length === 0 ? (
+                <li className="px-3 py-3 text-center text-xs italic text-muted-foreground">
+                  No patients match "{query}"
+                </li>
+              ) : (
+                results.map((p) => (
+                  <li key={p.mrn}>
+                    <button
+                      onClick={() => setSelected(p)}
+                      className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-[oklch(0.97_0.03_85)]"
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate font-display text-sm font-semibold uppercase tracking-wide text-[oklch(0.25_0.06_50)]">
+                          {p.name}
+                        </div>
+                        <div className="truncate text-[11px] italic text-muted-foreground">
+                          {p.mrn} · {p.condition}
+                        </div>
+                      </div>
+                      <StatusPill status={statusToPill(p.status)} />
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          )}
         </div>
+
+        {selected && <PatientCard patient={selected} onClose={() => setSelected(null)} />}
 
         {/* Tool grid */}
         <div className="mt-6 grid grid-cols-4 gap-x-2 gap-y-5">
@@ -141,6 +298,110 @@ function DoctorPortal() {
         </p>
       </div>
     </HieroFrame>
+  );
+}
+
+function statusToPill(s: Patient["status"]): string {
+  if (s === "critical") return "waiting";
+  if (s === "monitor") return "in-room";
+  return "scheduled";
+}
+
+function PatientCard({ patient, onClose }: { patient: Patient; onClose: () => void }) {
+  const statusStyles: Record<Patient["status"], string> = {
+    stable: "bg-[oklch(0.95_0.06_155)] text-[oklch(0.35_0.11_155)] ring-[oklch(0.6_0.11_155)]",
+    monitor: "bg-[oklch(0.95_0.08_85)] text-[oklch(0.4_0.12_60)] ring-[oklch(0.75_0.14_75)]",
+    critical: "bg-[oklch(0.94_0.08_25)] text-[oklch(0.4_0.19_25)] ring-[oklch(0.6_0.19_25)]",
+  };
+  const statusLabel: Record<Patient["status"], string> = {
+    stable: "Stable",
+    monitor: "Monitor",
+    critical: "Critical",
+  };
+  return (
+    <div className="mt-4 rounded-lg border border-[oklch(0.82_0.1_80)] bg-white/90 p-4 shadow-md">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="font-display text-base font-bold uppercase tracking-wider text-[oklch(0.22_0.06_45)]">
+            {patient.name}
+          </div>
+          <div className="text-[11px] italic text-muted-foreground">
+            {patient.mrn} · {patient.age}{patient.sex} · Last visit {patient.lastVisit}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span
+            className={`rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest ring-1 ${statusStyles[patient.status]}`}
+          >
+            {statusLabel[patient.status]}
+          </span>
+          <button
+            onClick={onClose}
+            className="text-xs text-muted-foreground hover:text-[oklch(0.5_0.19_25)]"
+            aria-label="Close patient details"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-3 rounded-md bg-[oklch(0.97_0.03_85)] px-3 py-2">
+        <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Condition</div>
+        <div className="font-display text-sm font-semibold text-[oklch(0.25_0.06_50)]">
+          {patient.condition}
+        </div>
+      </div>
+
+      <div className="mt-3 grid grid-cols-4 gap-2">
+        <Vital label="BP" value={patient.vitals.bp} />
+        <Vital label="HR" value={patient.vitals.hr} />
+        <Vital label="Temp" value={patient.vitals.temp} />
+        <Vital label="SpO₂" value={patient.vitals.spo2} />
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+        <InfoBlock label="Allergies" items={patient.allergies.length ? patient.allergies : ["None known"]} />
+        <InfoBlock label="Medications" items={patient.medications.length ? patient.medications : ["None"]} />
+      </div>
+
+      <div className="mt-3">
+        <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Clinical notes</div>
+        <p className="mt-1 text-xs italic text-[oklch(0.3_0.05_50)]">{patient.notes}</p>
+      </div>
+
+      <div className="mt-4 flex gap-2">
+        <button className="flex-1 rounded-md bg-[oklch(0.5_0.19_25)] px-3 py-2 font-display text-xs font-semibold uppercase tracking-widest text-white shadow hover:bg-[oklch(0.45_0.19_25)]">
+          Open chart
+        </button>
+        <button className="flex-1 rounded-md border border-[oklch(0.82_0.1_80)] bg-white px-3 py-2 font-display text-xs font-semibold uppercase tracking-widest text-[oklch(0.35_0.06_60)] shadow-sm hover:bg-[oklch(0.97_0.03_85)]">
+          Start consult
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Vital({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-[oklch(0.85_0.08_82)] bg-white px-2 py-1 text-center">
+      <div className="text-[9px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className="font-display text-sm font-bold text-[oklch(0.25_0.06_50)]">{value}</div>
+    </div>
+  );
+}
+
+function InfoBlock({ label, items }: { label: string; items: string[] }) {
+  return (
+    <div className="rounded-md border border-[oklch(0.85_0.08_82)] bg-white px-2 py-1.5">
+      <div className="text-[9px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <ul className="mt-0.5 space-y-0.5">
+        {items.map((it) => (
+          <li key={it} className="text-[11px] text-[oklch(0.3_0.05_50)]">
+            • {it}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
