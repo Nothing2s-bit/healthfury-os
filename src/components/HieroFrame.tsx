@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 // every HealthFury screen so it feels like a page from an ancient book.
 export function HieroFrame({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`relative min-h-screen bg-papyrus-texture ${className}`}>
+    <div className={`relative min-h-screen bg-hieroglyph ${className}`}>
       {/* Outer gold border */}
       <div className="pointer-events-none absolute inset-2 rounded-md border-2 border-[oklch(0.72_0.14_75)]" />
       <div className="pointer-events-none absolute inset-3 rounded-md border border-[oklch(0.82_0.1_80)]" />
