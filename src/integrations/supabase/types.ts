@@ -14,13 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      control_metrics: {
+        Row: {
+          amoxil_units: number
+          ems_active: number
+          ems_eta_min: number
+          er_wait_min: number
+          flu_cases: number
+          icu_load: number
+          id: number
+          nurses: number
+          panado_units: number
+          patients: number
+          staff: number
+          tb_cases: number
+          updated_at: string
+        }
+        Insert: {
+          amoxil_units?: number
+          ems_active?: number
+          ems_eta_min?: number
+          er_wait_min?: number
+          flu_cases?: number
+          icu_load?: number
+          id?: number
+          nurses?: number
+          panado_units?: number
+          patients?: number
+          staff?: number
+          tb_cases?: number
+          updated_at?: string
+        }
+        Update: {
+          amoxil_units?: number
+          ems_active?: number
+          ems_eta_min?: number
+          er_wait_min?: number
+          flu_cases?: number
+          icu_load?: number
+          id?: number
+          nurses?: number
+          panado_units?: number
+          patients?: number
+          staff?: number
+          tb_cases?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      tick_control_metrics: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
