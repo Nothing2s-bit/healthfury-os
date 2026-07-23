@@ -12,7 +12,7 @@ import {
   Search,
 } from "lucide-react";
 import { Heart, Footprints, Moon, Siren, Building2, ShieldAlert } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnkhLogo } from "@/components/AnkhLogo";
 import { HieroFrame } from "@/components/HieroFrame";
 import { HealthTile } from "@/components/HealthTile";
@@ -305,10 +305,50 @@ function DoctorPortal() {
 }
 
 function ControlScreen() {
+  const [counts, setCounts] = useState({ patients: 248, nurses: 34, staff: 62 });
+  const [disease, setDisease] = useState({ flu: 21, tb: 4, covid: "Low" });
+  const [ems, setEms] = useState({ active: 7, enRoute: 3, eta: 8 });
+  const [pharmacy, setPharmacy] = useState({ panado: 67, amoxil: 120, insulin: 12 });
+  const [facility, setFacility] = useState({ icu: 4, erWait: 22, theatre: 2 });
+
+  useEffect(() => {
+    const jitter = (v: number, spread: number, min: number, max: number) =>
+      Math.max(min, Math.min(max, v + Math.round((Math.random() - 0.5) * spread)));
+    const id = setInterval(() => {
+      setCounts((c) => ({
+        patients: jitter(c.patients, 6, 210, 290),
+        nurses: jitter(c.nurses, 2, 28, 42),
+        staff: jitter(c.staff, 3, 50, 75),
+      }));
+      setDisease((d) => ({
+        flu: jitter(d.flu, 3, 10, 40),
+        tb: jitter(d.tb, 1, 1, 8),
+        covid: Math.random() < 0.15 ? (d.covid === "Low" ? "Moderate" : "Low") : d.covid,
+      }));
+      setEms((e) => ({
+        active: jitter(e.active, 2, 3, 10),
+        enRoute: jitter(e.enRoute, 2, 0, 8),
+        eta: jitter(e.eta, 3, 4, 18),
+      }));
+      setPharmacy((p) => ({
+        panado: jitter(p.panado, 4, 20, 120),
+        amoxil: jitter(p.amoxil, 6, 40, 200),
+        insulin: jitter(p.insulin, 2, 4, 40),
+      }));
+      setFacility((f) => ({
+        icu: jitter(f.icu, 1, 0, 12),
+        erWait: jitter(f.erWait, 4, 5, 60),
+        theatre: jitter(f.theatre, 1, 0, 4),
+      }));
+    }, 2500);
+    return () => clearInterval(id);
+  }, []);
+
+  const total = counts.patients + counts.nurses + counts.staff;
   const staff = [
-    { label: "Patients", value: 248, icon: Heart },
-    { label: "Nurses", value: 34, icon: Footprints },
-    { label: "Staff", value: 62, icon: Moon },
+    { label: "Patients", value: counts.patients, icon: Heart },
+    { label: "Nurses", value: counts.nurses, icon: Footprints },
+    { label: "Staff", value: counts.staff, icon: Moon },
   ];
   return (
     <section className="mt-10">
@@ -332,10 +372,10 @@ function ControlScreen() {
               Live Facility
             </div>
             <div className="font-display text-4xl font-bold text-[oklch(0.22_0.06_45)]">
-              344
+              {total}
             </div>
             <div className="text-[10px] uppercase tracking-widest text-[oklch(0.5_0.19_25)]">
-              Total on site
+              Total on site · live
             </div>
           </div>
 
@@ -359,24 +399,24 @@ function ControlScreen() {
       {/* Four square panels */}
       <div className="mt-6 grid grid-cols-2 gap-3">
         <Panel title="Disease Monitor" icon={ShieldAlert} accent="red">
-          <Row label="Flu" value="21 cases" />
-          <Row label="TB" value="4 active" />
-          <Row label="COVID-19" value="Low" />
+          <Row label="Flu" value={`${disease.flu} cases`} />
+          <Row label="TB" value={`${disease.tb} active`} />
+          <Row label="COVID-19" value={disease.covid} />
         </Panel>
         <Panel title="EMS Dispatch" icon={Siren} accent="red">
-          <Row label="Units active" value="7 / 10" />
-          <Row label="En route" value="3" />
-          <Row label="Avg ETA" value="8 min" />
+          <Row label="Units active" value={`${ems.active} / 10`} />
+          <Row label="En route" value={`${ems.enRoute}`} />
+          <Row label="Avg ETA" value={`${ems.eta} min`} />
         </Panel>
         <Panel title="Pharmacy Stats" icon={Pill} accent="gold">
-          <Row label="Panado" value="67 units" />
-          <Row label="Amoxil" value="120 units" />
-          <Row label="Insulin" value="Low · 12" />
+          <Row label="Panado" value={`${pharmacy.panado} units`} />
+          <Row label="Amoxil" value={`${pharmacy.amoxil} units`} />
+          <Row label="Insulin" value={pharmacy.insulin <= 15 ? `Low · ${pharmacy.insulin}` : `${pharmacy.insulin} units`} />
         </Panel>
         <Panel title="Facility Load" icon={Building2} accent="gold">
-          <Row label="ICU beds" value="4 / 12" />
-          <Row label="ER wait" value="22 min" />
-          <Row label="Theatre" value="2 in use" />
+          <Row label="ICU beds" value={`${facility.icu} / 12`} />
+          <Row label="ER wait" value={`${facility.erWait} min`} />
+          <Row label="Theatre" value={`${facility.theatre} in use`} />
         </Panel>
       </div>
     </section>
