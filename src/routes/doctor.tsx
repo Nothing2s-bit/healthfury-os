@@ -11,6 +11,7 @@ import {
   UserRound,
   Search,
 } from "lucide-react";
+import { Heart, Footprints, Moon, Siren, Building2, ShieldAlert } from "lucide-react";
 import { useMemo, useState } from "react";
 import { AnkhLogo } from "@/components/AnkhLogo";
 import { HieroFrame } from "@/components/HieroFrame";
@@ -296,8 +297,128 @@ function DoctorPortal() {
         <p className="mt-8 text-center text-xs italic text-muted-foreground">
           Clinical decisions remain with the attending clinician.
         </p>
+
+        <ControlScreen />
       </div>
     </HieroFrame>
+  );
+}
+
+function ControlScreen() {
+  const staff = [
+    { label: "Patients", value: 248, icon: Heart },
+    { label: "Nurses", value: 34, icon: Footprints },
+    { label: "Staff", value: 62, icon: Moon },
+  ];
+  return (
+    <section className="mt-10">
+      <div className="rounded-md bg-gold-bar px-4 py-2 text-center">
+        <h2 className="font-display text-base font-bold uppercase tracking-[0.25em] text-[oklch(0.22_0.06_45)]">
+          Control Screen
+        </h2>
+      </div>
+
+      {/* Big vitality-style ring */}
+      <div className="mt-5 flex justify-center">
+        <div
+          className="ring-gold relative flex h-64 w-64 items-center justify-center rounded-full bg-white shadow-[0_10px_30px_-12px_oklch(0.6_0.15_65/0.55)]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 50% 50%, white 55%, oklch(0.95 0.06 82) 56%, oklch(0.85 0.11 78) 62%, oklch(0.72 0.14 75) 68%, oklch(0.95 0.06 82) 74%, white 76%)",
+          }}
+        >
+          <div className="flex h-40 w-40 flex-col items-center justify-center rounded-full bg-white text-center ring-1 ring-[oklch(0.82_0.1_80)]">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Live Facility
+            </div>
+            <div className="font-display text-4xl font-bold text-[oklch(0.22_0.06_45)]">
+              344
+            </div>
+            <div className="text-[10px] uppercase tracking-widest text-[oklch(0.5_0.19_25)]">
+              Total on site
+            </div>
+          </div>
+
+          {/* Stat feet under numeric */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center gap-4 text-center">
+            {staff.map((s) => (
+              <div key={s.label} className="flex flex-col items-center">
+                <s.icon className="h-3.5 w-3.5 text-[oklch(0.6_0.15_65)]" />
+                <span className="font-display text-xs font-bold text-[oklch(0.22_0.06_45)]">
+                  {s.value}
+                </span>
+                <span className="text-[8px] uppercase tracking-widest text-muted-foreground">
+                  {s.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Four square panels */}
+      <div className="mt-6 grid grid-cols-2 gap-3">
+        <Panel title="Disease Monitor" icon={ShieldAlert} accent="red">
+          <Row label="Flu" value="21 cases" />
+          <Row label="TB" value="4 active" />
+          <Row label="COVID-19" value="Low" />
+        </Panel>
+        <Panel title="EMS Dispatch" icon={Siren} accent="red">
+          <Row label="Units active" value="7 / 10" />
+          <Row label="En route" value="3" />
+          <Row label="Avg ETA" value="8 min" />
+        </Panel>
+        <Panel title="Pharmacy Stats" icon={Pill} accent="gold">
+          <Row label="Panado" value="67 units" />
+          <Row label="Amoxil" value="120 units" />
+          <Row label="Insulin" value="Low · 12" />
+        </Panel>
+        <Panel title="Facility Load" icon={Building2} accent="gold">
+          <Row label="ICU beds" value="4 / 12" />
+          <Row label="ER wait" value="22 min" />
+          <Row label="Theatre" value="2 in use" />
+        </Panel>
+      </div>
+    </section>
+  );
+}
+
+function Panel({
+  title,
+  icon: Icon,
+  accent,
+  children,
+}: {
+  title: string;
+  icon: typeof Pill;
+  accent: "red" | "gold";
+  children: React.ReactNode;
+}) {
+  const iconColor =
+    accent === "red" ? "text-[oklch(0.5_0.19_25)]" : "text-[oklch(0.6_0.15_65)]";
+  return (
+    <div className="rounded-lg border border-[oklch(0.82_0.1_80)] bg-white/85 p-3 shadow-sm">
+      <div className="mb-2 flex items-center gap-2 border-b border-[oklch(0.9_0.06_82)] pb-1.5">
+        <div className="ring-gold flex h-7 w-7 items-center justify-center rounded-full bg-white">
+          <Icon className={`h-3.5 w-3.5 ${iconColor}`} />
+        </div>
+        <div className="font-display text-[11px] font-bold uppercase tracking-widest text-[oklch(0.22_0.06_45)]">
+          {title}
+        </div>
+      </div>
+      <div className="space-y-1">{children}</div>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between border-b border-dotted border-[oklch(0.9_0.06_82)] py-0.5 text-[11px] last:border-0">
+      <span className="text-[oklch(0.35_0.06_60)]">{label}</span>
+      <span className="font-display font-semibold text-[oklch(0.22_0.06_45)]">
+        {value}
+      </span>
+    </div>
   );
 }
 
