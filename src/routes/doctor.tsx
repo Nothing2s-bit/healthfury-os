@@ -16,6 +16,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AnkhLogo } from "@/components/AnkhLogo";
 import { HieroFrame } from "@/components/HieroFrame";
 import { HealthTile } from "@/components/HealthTile";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/doctor")({
   head: () => ({
@@ -305,45 +306,43 @@ function DoctorPortal() {
 }
 
 function ControlScreen() {
-  const [counts, setCounts] = useState({ patients: 248, nurses: 34, staff: 62 });
-  const [disease, setDisease] = useState({ flu: 21, tb: 4, covid: "Low" });
-  const [ems, setEms] = useState({ active: 7, enRoute: 3, eta: 8 });
-  const [pharmacy, setPharmacy] = useState({ panado: 67, amoxil: 120, insulin: 12 });
-  const [facility, setFacility] = useState({ icu: 4, erWait: 22, theatre: 2 });
+  type Metrics = {
+    patients: number; nurses: number; staff: number;
+    flu_cases: number; tb_cases: number;
+    ems_active: number; ems_eta_min: number;
+    panado_units: number; amoxil_units: number;
+    icu_load: number; er_wait_min: number;
+    updated_at?: string;
+  };
+  const [m, setM] = useState<Metrics | null>(null);
+  const [live, setLive] = useState(false);
 
   useEffect(() => {
-    const jitter = (v: number, spread: number, min: number, max: number) =>
-      Math.max(min, Math.min(max, v + Math.round((Math.random() - 0.5) * spread)));
-    const id = setInterval(() => {
-      setCounts((c) => ({
-        patients: jitter(c.patients, 6, 210, 290),
-        nurses: jitter(c.nurses, 2, 28, 42),
-        staff: jitter(c.staff, 3, 50, 75),
-      }));
-      setDisease((d) => ({
-        flu: jitter(d.flu, 3, 10, 40),
-        tb: jitter(d.tb, 1, 1, 8),
-        covid: Math.random() < 0.15 ? (d.covid === "Low" ? "Moderate" : "Low") : d.covid,
-      }));
-      setEms((e) => ({
-        active: jitter(e.active, 2, 3, 10),
-        enRoute: jitter(e.enRoute, 2, 0, 8),
-        eta: jitter(e.eta, 3, 4, 18),
-      }));
-      setPharmacy((p) => ({
-        panado: jitter(p.panado, 4, 20, 120),
-        amoxil: jitter(p.amoxil, 6, 40, 200),
-        insulin: jitter(p.insulin, 2, 4, 40),
-      }));
-      setFacility((f) => ({
-        icu: jitter(f.icu, 1, 0, 12),
-        erWait: jitter(f.erWait, 4, 5, 60),
-        theatre: jitter(f.theatre, 1, 0, 4),
-      }));
-    }, 2500);
-    return () => clearInterval(id);
+    let mounted = true;
+    (supabase.from("control_metrics" as never) as any)
+      .select("*")
+      .eq("id", 1)
+      .maybeSingle()
+      .then(({ data }: { data: Metrics | null }) => {
+        if (mounted && data) setM(data);
+      });
+
+    const channel = supabase
+      .channel("control_metrics_live")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "control_metrics" },
+        (payload) => setM(payload.new as Metrics),
+      )
+      .subscribe((status) => setLive(status === "SUBSCRIBED"));
+
+    return () => {
+      mounted = false;
+      supabase.removeChannel(channel);
+    };
   }, []);
 
+  const counts = { patients: m?.patients ?? 0, nurses: m?.nurses ?? 0, staff: m?.staff ?? 0 };
   const total = counts.patients + counts.nurses + counts.staff;
   const staff = [
     { label: "Patients", value: counts.patients, icon: Heart },
@@ -356,6 +355,10 @@ function ControlScreen() {
         <h2 className="font-display text-base font-bold uppercase tracking-[0.25em] text-[oklch(0.22_0.06_45)]">
           Control Screen
         </h2>
+        <div className="mt-1 flex items-center justify-center gap-1.5 text-[9px] uppercase tracking-widest text-[oklch(0.3_0.06_50)]">
+          <span className={`h-1.5 w-1.5 rounded-full ${live ? "bg-[oklch(0.65_0.18_150)] animate-pulse" : "bg-muted-foreground/50"}`} />
+          {live ? "Realtime · streaming" : "Connecting…"}
+        </div>
       </div>
 
       {/* Big vitality-style ring */}
@@ -399,24 +402,24 @@ function ControlScreen() {
       {/* Four square panels */}
       <div className="mt-6 grid grid-cols-2 gap-3">
         <Panel title="Disease Monitor" icon={ShieldAlert} accent="red">
-          <Row label="Flu" value={`${disease.flu} cases`} />
-          <Row label="TB" value={`${disease.tb} active`} />
-          <Row label="COVID-19" value={disease.covid} />
+          <Row label="Flu" value={`${m?.flu_cases ?? 0} cases`} />
+          <Row label="TB" value={`${m?.tb_cases ?? 0} active`} />
+          <Row label="COVID-19" value={(m?.flu_cases ?? 0) > 25 ? "Moderate" : "Low"} />
         </Panel>
         <Panel title="EMS Dispatch" icon={Siren} accent="red">
-          <Row label="Units active" value={`${ems.active} / 10`} />
-          <Row label="En route" value={`${ems.enRoute}`} />
-          <Row label="Avg ETA" value={`${ems.eta} min`} />
+          <Row label="Units active" value={`${m?.ems_active ?? 0} / 12`} />
+          <Row label="Avg ETA" value={`${m?.ems_eta_min ?? 0} min`} />
+          <Row label="En route" value={`${Math.max(0, (m?.ems_active ?? 0) - 2)}`} />
         </Panel>
         <Panel title="Pharmacy Stats" icon={Pill} accent="gold">
-          <Row label="Panado" value={`${pharmacy.panado} units`} />
-          <Row label="Amoxil" value={`${pharmacy.amoxil} units`} />
-          <Row label="Insulin" value={pharmacy.insulin <= 15 ? `Low · ${pharmacy.insulin}` : `${pharmacy.insulin} units`} />
+          <Row label="Panado" value={`${m?.panado_units ?? 0} units`} />
+          <Row label="Amoxil" value={`${m?.amoxil_units ?? 0} units`} />
+          <Row label="Insulin" value={(m?.amoxil_units ?? 0) <= 40 ? `Low · ${m?.amoxil_units ?? 0}` : "OK"} />
         </Panel>
         <Panel title="Facility Load" icon={Building2} accent="gold">
-          <Row label="ICU beds" value={`${facility.icu} / 12`} />
-          <Row label="ER wait" value={`${facility.erWait} min`} />
-          <Row label="Theatre" value={`${facility.theatre} in use`} />
+          <Row label="ICU load" value={`${m?.icu_load ?? 0}%`} />
+          <Row label="ER wait" value={`${m?.er_wait_min ?? 0} min`} />
+          <Row label="Theatre" value={`${Math.round(((m?.icu_load ?? 0) / 25))} in use`} />
         </Panel>
       </div>
     </section>
