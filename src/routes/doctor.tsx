@@ -319,13 +319,12 @@ function ControlScreen() {
 
   useEffect(() => {
     let mounted = true;
-    supabase
-      .from("control_metrics")
+    (supabase.from("control_metrics" as never) as any)
       .select("*")
       .eq("id", 1)
       .maybeSingle()
-      .then(({ data }) => {
-        if (mounted && data) setM(data as Metrics);
+      .then(({ data }: { data: Metrics | null }) => {
+        if (mounted && data) setM(data);
       });
 
     const channel = supabase
