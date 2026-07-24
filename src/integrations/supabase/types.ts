@@ -62,6 +62,74 @@ export type Database = {
         }
         Relationships: []
       }
+      conversations: {
+        Row: {
+          created_at: string
+          doctor_id: string
+          id: string
+          last_message_at: string
+          patient_id: string
+        }
+        Insert: {
+          created_at?: string
+          doctor_id: string
+          id?: string
+          last_message_at?: string
+          patient_id: string
+        }
+        Update: {
+          created_at?: string
+          doctor_id?: string
+          id?: string
+          last_message_at?: string
+          patient_id?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          body: string | null
+          conversation_id: string
+          created_at: string
+          id: string
+          kind: string
+          media_duration_ms: number | null
+          media_mime: string | null
+          media_path: string | null
+          sender_id: string
+        }
+        Insert: {
+          body?: string | null
+          conversation_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          media_duration_ms?: number | null
+          media_mime?: string | null
+          media_path?: string | null
+          sender_id: string
+        }
+        Update: {
+          body?: string | null
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          media_duration_ms?: number | null
+          media_mime?: string | null
+          media_path?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           consult_hours: string | null
@@ -130,9 +198,21 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      doctors_directory: {
+        Row: {
+          consult_hours: string | null
+          dept_specialty: string | null
+          full_name: string | null
+          id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      get_or_create_conversation: {
+        Args: { _doctor_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
