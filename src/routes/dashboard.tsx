@@ -31,11 +31,11 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 const tiles = [
-  { icon: UserRound, label: "Nurse", to: "/", accent: "red" as const },
-  { icon: Stethoscope, label: "Doctor", to: "/doctor", accent: "red" as const },
-  { icon: ShieldCheck, label: "Admin", to: "/", accent: "gold" as const },
+  { icon: UserRound, label: "Nurse", to: "/register?role=nurse", accent: "red" as const },
+  { icon: Stethoscope, label: "Doctor", to: "/register?role=doctor", accent: "red" as const },
+  { icon: ShieldCheck, label: "Admin", to: "/register?role=admin", accent: "gold" as const },
   { icon: Package, label: "Stock", to: "/", accent: "red" as const },
-  { icon: Users, label: "Booking", to: "/", accent: "gold" as const },
+  { icon: Users, label: "Booking", to: "/register?role=patient", accent: "gold" as const },
   { icon: Pill, label: "Pharmacy", to: "/", accent: "gold" as const },
   { icon: Syringe, label: "Vaccines", to: "/", accent: "gold" as const },
   { icon: MessageCircle, label: "Chat", to: "/chat", accent: "gold" as const },
