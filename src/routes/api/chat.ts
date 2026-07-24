@@ -43,8 +43,8 @@ export const Route = createFileRoute("/api/chat")({
             originalMessages: messages as UIMessage[],
           });
         } catch (err) {
-          const message = err instanceof Error ? err.message : "AI gateway error";
-          return new Response(message, { status: 500 });
+          console.error("AI gateway error", err);
+          return new Response("Something went wrong. Please try again.", { status: 500 });
         }
       },
     },
