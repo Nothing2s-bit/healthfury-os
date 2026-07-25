@@ -14,6 +14,98 @@ export type Database = {
   }
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          appointment_date: string
+          appointment_time: string
+          clinic_id: string
+          created_at: string
+          department: string
+          id: string
+          notes: string | null
+          patient_id: string
+          qr_payload: string
+          reference_code: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time: string
+          clinic_id: string
+          created_at?: string
+          department: string
+          id?: string
+          notes?: string | null
+          patient_id: string
+          qr_payload: string
+          reference_code: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string
+          clinic_id?: string
+          created_at?: string
+          department?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          qr_payload?: string
+          reference_code?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinics: {
+        Row: {
+          address: string
+          area_code: string | null
+          closes_at: string
+          created_at: string
+          daily_capacity: number
+          id: string
+          latitude: number
+          longitude: number
+          name: string
+          opens_at: string
+        }
+        Insert: {
+          address: string
+          area_code?: string | null
+          closes_at?: string
+          created_at?: string
+          daily_capacity?: number
+          id?: string
+          latitude: number
+          longitude: number
+          name: string
+          opens_at?: string
+        }
+        Update: {
+          address?: string
+          area_code?: string | null
+          closes_at?: string
+          created_at?: string
+          daily_capacity?: number
+          id?: string
+          latitude?: number
+          longitude?: number
+          name?: string
+          opens_at?: string
+        }
+        Relationships: []
+      }
       control_metrics: {
         Row: {
           amoxil_units: number
