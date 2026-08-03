@@ -15,6 +15,7 @@ import {
   MessagesSquare,
   FileBarChart,
   Pill,
+  ScanLine,
 } from "lucide-react";
 import { AnkhLogo } from "@/components/AnkhLogo";
 import { HieroFrame } from "@/components/HieroFrame";
