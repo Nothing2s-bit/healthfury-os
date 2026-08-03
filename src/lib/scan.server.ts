@@ -48,10 +48,10 @@ export async function runHealthScan(input: {
     : input.imageDataUrl;
 
   try {
-    const { output } = await generateText({
+    const result = await generateText({
       model,
       system: SYSTEM_PROMPT,
-      output: Output.object({ schema: ScanResultSchema }),
+      experimental_output: Output.object({ schema: ScanResultSchema }),
       messages: [
         {
           role: "user",
@@ -72,6 +72,7 @@ export async function runHealthScan(input: {
       ],
     });
 
+    const output = result.experimental_output;
     return {
       ...output,
       observations: output.observations.slice(0, 5),
