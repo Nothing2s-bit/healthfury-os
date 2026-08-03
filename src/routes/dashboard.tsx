@@ -15,6 +15,7 @@ import {
   MessagesSquare,
   FileBarChart,
   Pill,
+  ScanLine,
 } from "lucide-react";
 import { AnkhLogo } from "@/components/AnkhLogo";
 import { HieroFrame } from "@/components/HieroFrame";
@@ -144,14 +145,23 @@ function HealthRadial() {
           );
         })}
       </svg>
-      {/* Center gem */}
-      <div className="relative h-12 w-12 rounded-full bg-gradient-to-br from-[oklch(0.7_0.2_35)] to-[oklch(0.4_0.18_25)] shadow-[0_0_30px_oklch(0.6_0.2_35_/_0.6)]">
-        <div className="absolute inset-1 rounded-full bg-[oklch(0.85_0.15_65)] opacity-40 blur-sm" />
-      </div>
+      {/* Center gem — launches the AI health scan */}
+      <Link
+        to="/scan"
+        aria-label="Start AI health scan"
+        className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[oklch(0.7_0.2_35)] to-[oklch(0.4_0.18_25)] shadow-[0_0_30px_oklch(0.6_0.2_35_/_0.6)] transition active:scale-95 hover:shadow-[0_0_44px_oklch(0.6_0.2_35_/_0.8)]"
+      >
+        <span className="absolute inset-1 rounded-full bg-[oklch(0.85_0.15_65)] opacity-40 blur-sm" />
+        <span className="absolute inset-0 animate-ping rounded-full bg-[oklch(0.6_0.2_35_/_0.35)]" />
+        <ScanLine className="relative h-6 w-6 text-white" />
+      </Link>
       {/* Status badge */}
-      <div className="absolute -bottom-1 right-6 rounded-full bg-[oklch(0.5_0.19_25)] px-2 py-0.5 font-display text-[10px] font-bold uppercase tracking-wider text-white shadow">
+      <Link
+        to="/scan"
+        className="absolute -bottom-1 right-6 rounded-full bg-[oklch(0.5_0.19_25)] px-2.5 py-0.5 font-display text-[10px] font-bold uppercase tracking-wider text-white shadow transition active:scale-95"
+      >
         Scan
-      </div>
+      </Link>
     </div>
   );
 }
