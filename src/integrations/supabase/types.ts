@@ -267,6 +267,39 @@ export type Database = {
         }
         Relationships: []
       }
+      scan_audit_log: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          findings: Json
+          id: string
+          scan_type: string
+          status: string
+          summary: string | null
+          urgency: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          findings?: Json
+          id?: string
+          scan_type: string
+          status?: string
+          summary?: string | null
+          urgency?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          findings?: Json
+          id?: string
+          scan_type?: string
+          status?: string
+          summary?: string | null
+          urgency?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
