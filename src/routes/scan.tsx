@@ -163,6 +163,14 @@ function ScanPage() {
           Point the camera at your face, eyes, throat or skin. The AI describes what it can see and
           recommends a safe next step — it does not diagnose.
         </p>
+        <div className="mt-2 text-center">
+          <Link
+            to="/audit"
+            className="font-body text-[11px] font-semibold underline underline-offset-2 text-[oklch(0.6_0.15_65)]"
+          >
+            View scan audit log
+          </Link>
+        </div>
 
         {/* Viewport */}
         <div className="relative mt-4 overflow-hidden rounded-2xl border-2 border-[oklch(0.72_0.14_75)] bg-black shadow-lg">
