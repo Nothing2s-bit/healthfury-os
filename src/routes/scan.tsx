@@ -6,6 +6,7 @@ import { HieroFrame } from "@/components/HieroFrame";
 import { AnkhLogo } from "@/components/AnkhLogo";
 import { analyzeHealthScan } from "@/lib/scan.functions";
 import type { ScanResult } from "@/lib/scan.server";
+import { logScan } from "@/lib/audit";
 
 export const Route = createFileRoute("/scan")({
   head: () => ({
@@ -116,8 +117,20 @@ function ScanPage() {
       const mimeType = shot.slice(5, shot.indexOf(";")) || "image/jpeg";
       const data = await analyze({ data: { imageDataUrl: shot, mimeType, notes: notes || undefined } });
       setResult(data as ScanResult);
+      void logScan({
+        scanType: "health",
+        status: "success",
+        summary: (data as ScanResult).overallImpression,
+        urgency: (data as ScanResult).urgency,
+        findings: (data as ScanResult).observations.map((o) => `${o.area}: ${o.finding} (${o.confidence})`),
+      });
     } catch {
       setError("The scan could not be completed. Please try again in a moment.");
+      void logScan({
+        scanType: "health",
+        status: "failed",
+        summary: "The scan could not be completed.",
+      });
     } finally {
       setBusy(false);
     }
