@@ -178,6 +178,53 @@ export type Database = {
         }
         Relationships: []
       }
+      medical_stock: {
+        Row: {
+          category: string
+          clinic_id: string | null
+          created_at: string
+          id: string
+          item_name: string
+          location: string | null
+          quantity_on_hand: number
+          reorder_level: number
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          clinic_id?: string | null
+          created_at?: string
+          id?: string
+          item_name: string
+          location?: string | null
+          quantity_on_hand?: number
+          reorder_level?: number
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          clinic_id?: string | null
+          created_at?: string
+          id?: string
+          item_name?: string
+          location?: string | null
+          quantity_on_hand?: number
+          reorder_level?: number
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_stock_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           body: string | null
@@ -387,6 +434,69 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_deliveries: {
+        Row: {
+          clinic_id: string | null
+          created_at: string
+          delivered_at: string
+          destination: string
+          id: string
+          item_name: string
+          note: string | null
+          quantity: number
+          received_by: string | null
+          received_by_name: string | null
+          stock_item_id: string | null
+          supplier: string | null
+          unit: string
+        }
+        Insert: {
+          clinic_id?: string | null
+          created_at?: string
+          delivered_at?: string
+          destination: string
+          id?: string
+          item_name: string
+          note?: string | null
+          quantity: number
+          received_by?: string | null
+          received_by_name?: string | null
+          stock_item_id?: string | null
+          supplier?: string | null
+          unit?: string
+        }
+        Update: {
+          clinic_id?: string | null
+          created_at?: string
+          delivered_at?: string
+          destination?: string
+          id?: string
+          item_name?: string
+          note?: string | null
+          quantity?: number
+          received_by?: string | null
+          received_by_name?: string | null
+          stock_item_id?: string | null
+          supplier?: string | null
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_deliveries_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_deliveries_stock_item_id_fkey"
+            columns: ["stock_item_id"]
+            isOneToOne: false
+            referencedRelation: "medical_stock"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -432,6 +542,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_health_staff: { Args: { _user_id: string }; Returns: boolean }
+      is_stock_manager: { Args: { _user_id: string }; Returns: boolean }
       tick_control_metrics: { Args: never; Returns: undefined }
     }
     Enums: {
