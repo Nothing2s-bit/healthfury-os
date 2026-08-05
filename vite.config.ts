@@ -12,4 +12,8 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Widen device support: compile the browser bundle down for older Android WebViews.
+  vite: {
+    build: { target: ["es2015", "chrome61", "safari11"], cssTarget: ["chrome61", "safari11"] },
+  },
 });
