@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as StockRouteImport } from './routes/stock'
 import { Route as ScanRouteImport } from './routes/scan'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as PatientsRouteImport } from './routes/patients'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as DoctorRouteImport } from './routes/doctor'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -34,6 +35,11 @@ const ScanRoute = ScanRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PatientsRoute = PatientsRouteImport.update({
+  id: '/patients',
+  path: '/patients',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MessagesRoute = MessagesRouteImport.update({
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/doctor': typeof DoctorRoute
   '/messages': typeof MessagesRoute
+  '/patients': typeof PatientsRoute
   '/register': typeof RegisterRoute
   '/scan': typeof ScanRoute
   '/stock': typeof StockRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/doctor': typeof DoctorRoute
   '/messages': typeof MessagesRoute
+  '/patients': typeof PatientsRoute
   '/register': typeof RegisterRoute
   '/scan': typeof ScanRoute
   '/stock': typeof StockRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/doctor': typeof DoctorRoute
   '/messages': typeof MessagesRoute
+  '/patients': typeof PatientsRoute
   '/register': typeof RegisterRoute
   '/scan': typeof ScanRoute
   '/stock': typeof StockRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/doctor'
     | '/messages'
+    | '/patients'
     | '/register'
     | '/scan'
     | '/stock'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/doctor'
     | '/messages'
+    | '/patients'
     | '/register'
     | '/scan'
     | '/stock'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/doctor'
     | '/messages'
+    | '/patients'
     | '/register'
     | '/scan'
     | '/stock'
@@ -167,6 +179,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   DoctorRoute: typeof DoctorRoute
   MessagesRoute: typeof MessagesRoute
+  PatientsRoute: typeof PatientsRoute
   RegisterRoute: typeof RegisterRoute
   ScanRoute: typeof ScanRoute
   StockRoute: typeof StockRoute
@@ -194,6 +207,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/patients': {
+      id: '/patients'
+      path: '/patients'
+      fullPath: '/patients'
+      preLoaderRoute: typeof PatientsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/messages': {
@@ -263,6 +283,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   DoctorRoute: DoctorRoute,
   MessagesRoute: MessagesRoute,
+  PatientsRoute: PatientsRoute,
   RegisterRoute: RegisterRoute,
   ScanRoute: ScanRoute,
   StockRoute: StockRoute,
