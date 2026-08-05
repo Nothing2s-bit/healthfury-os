@@ -184,6 +184,29 @@ function BookingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [coords, date]);
 
+  // Live capacity: refresh a clinic's booked count whenever anyone books.
+  useEffect(() => {
+    const channel = supabase
+      .channel("bookings-capacity")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "bookings" },
+        async () => {
+          const { data: rows } = await supabase
+            .from("bookings")
+            .select("clinic_id")
+            .eq("appointment_date", date);
+          const counts = new Map<string, number>();
+          (rows ?? []).forEach((r) => counts.set(r.clinic_id, (counts.get(r.clinic_id) ?? 0) + 1));
+          setClinics((prev) => prev.map((c) => ({ ...c, bookedToday: counts.get(c.id) ?? 0 })));
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [date]);
+
   const selected = useMemo(
     () => clinics.find((c) => c.id === selectedClinic) ?? null,
     [clinics, selectedClinic],
