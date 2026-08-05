@@ -435,7 +435,13 @@ export type Database = {
       tick_control_metrics: { Args: never; Returns: undefined }
     }
     Enums: {
-      app_role: "patient" | "nurse" | "doctor" | "admin"
+      app_role:
+        | "patient"
+        | "nurse"
+        | "doctor"
+        | "admin"
+        | "storage_manager"
+        | "minister"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -563,7 +569,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["patient", "nurse", "doctor", "admin"],
+      app_role: [
+        "patient",
+        "nurse",
+        "doctor",
+        "admin",
+        "storage_manager",
+        "minister",
+      ],
     },
   },
 } as const
