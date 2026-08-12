@@ -178,11 +178,159 @@ export type Database = {
         }
         Relationships: []
       }
+      doh_submissions: {
+        Row: {
+          created_at: string
+          facility: string | null
+          id: string
+          note: string | null
+          period_end: string | null
+          period_start: string | null
+          reference: string
+          report_type: string
+          row_count: number
+          status: string
+          submitted_by: string | null
+          submitted_by_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          facility?: string | null
+          id?: string
+          note?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          reference: string
+          report_type: string
+          row_count?: number
+          status?: string
+          submitted_by?: string | null
+          submitted_by_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          facility?: string | null
+          id?: string
+          note?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          reference?: string
+          report_type?: string
+          row_count?: number
+          status?: string
+          submitted_by?: string | null
+          submitted_by_name?: string | null
+        }
+        Relationships: []
+      }
+      lab_orders: {
+        Row: {
+          created_at: string
+          id: string
+          ordered_by: string | null
+          ordered_by_name: string | null
+          patient_file_id: string | null
+          patient_name: string
+          priority: string
+          result_summary: string | null
+          resulted_at: string | null
+          status: string
+          test_id: string | null
+          test_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ordered_by?: string | null
+          ordered_by_name?: string | null
+          patient_file_id?: string | null
+          patient_name: string
+          priority?: string
+          result_summary?: string | null
+          resulted_at?: string | null
+          status?: string
+          test_id?: string | null
+          test_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ordered_by?: string | null
+          ordered_by_name?: string | null
+          patient_file_id?: string | null
+          patient_name?: string
+          priority?: string
+          result_summary?: string | null
+          resulted_at?: string | null
+          status?: string
+          test_id?: string | null
+          test_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lab_orders_patient_file_id_fkey"
+            columns: ["patient_file_id"]
+            isOneToOne: false
+            referencedRelation: "patient_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lab_orders_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "lab_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lab_tests: {
+        Row: {
+          available: boolean
+          code: string
+          created_at: string
+          department: string
+          id: string
+          name: string
+          notes: string | null
+          price_cents: number
+          sample_type: string
+          turnaround_hours: number
+        }
+        Insert: {
+          available?: boolean
+          code: string
+          created_at?: string
+          department: string
+          id?: string
+          name: string
+          notes?: string | null
+          price_cents?: number
+          sample_type: string
+          turnaround_hours?: number
+        }
+        Update: {
+          available?: boolean
+          code?: string
+          created_at?: string
+          department?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          price_cents?: number
+          sample_type?: string
+          turnaround_hours?: number
+        }
+        Relationships: []
+      }
       medical_stock: {
         Row: {
           category: string
           clinic_id: string | null
           created_at: string
+          department: string
           id: string
           item_name: string
           location: string | null
@@ -195,6 +343,7 @@ export type Database = {
           category?: string
           clinic_id?: string | null
           created_at?: string
+          department?: string
           id?: string
           item_name: string
           location?: string | null
@@ -207,6 +356,7 @@ export type Database = {
           category?: string
           clinic_id?: string | null
           created_at?: string
+          department?: string
           id?: string
           item_name?: string
           location?: string | null
@@ -292,6 +442,7 @@ export type Database = {
           notes: string | null
           patient_id: string | null
           phone: string | null
+          photo_path: string | null
           sex: string | null
           spo2: string | null
           status: string
@@ -320,6 +471,7 @@ export type Database = {
           notes?: string | null
           patient_id?: string | null
           phone?: string | null
+          photo_path?: string | null
           sex?: string | null
           spo2?: string | null
           status?: string
@@ -348,6 +500,7 @@ export type Database = {
           notes?: string | null
           patient_id?: string | null
           phone?: string | null
+          photo_path?: string | null
           sex?: string | null
           spo2?: string | null
           status?: string
@@ -517,6 +670,163 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      vaccine_movements: {
+        Row: {
+          actor_id: string | null
+          actor_name: string | null
+          created_at: string
+          id: string
+          kind: string
+          location: string | null
+          note: string | null
+          occurred_at: string
+          quantity: number
+          scheduled_for: string | null
+          vaccine_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          location?: string | null
+          note?: string | null
+          occurred_at?: string
+          quantity: number
+          scheduled_for?: string | null
+          vaccine_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          location?: string | null
+          note?: string | null
+          occurred_at?: string
+          quantity?: number
+          scheduled_for?: string | null
+          vaccine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vaccine_movements_vaccine_id_fkey"
+            columns: ["vaccine_id"]
+            isOneToOne: false
+            referencedRelation: "vaccines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vaccines: {
+        Row: {
+          batch_no: string | null
+          created_at: string
+          doses_delivered: number
+          doses_on_hand: number
+          doses_used: number
+          expiry_date: string | null
+          id: string
+          location: string | null
+          manufacturer: string | null
+          name: string
+          next_campaign_date: string | null
+          reorder_level: number
+          storage_temp: string
+          target_disease: string
+          updated_at: string
+        }
+        Insert: {
+          batch_no?: string | null
+          created_at?: string
+          doses_delivered?: number
+          doses_on_hand?: number
+          doses_used?: number
+          expiry_date?: string | null
+          id?: string
+          location?: string | null
+          manufacturer?: string | null
+          name: string
+          next_campaign_date?: string | null
+          reorder_level?: number
+          storage_temp?: string
+          target_disease: string
+          updated_at?: string
+        }
+        Update: {
+          batch_no?: string | null
+          created_at?: string
+          doses_delivered?: number
+          doses_on_hand?: number
+          doses_used?: number
+          expiry_date?: string | null
+          id?: string
+          location?: string | null
+          manufacturer?: string | null
+          name?: string
+          next_campaign_date?: string | null
+          reorder_level?: number
+          storage_temp?: string
+          target_disease?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      vouchers: {
+        Row: {
+          amount_cents: number
+          booking_id: string | null
+          consumed_at: string | null
+          created_at: string
+          currency: string
+          id: string
+          kind: string
+          method: string
+          reference: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          booking_id?: string | null
+          consumed_at?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          kind: string
+          method?: string
+          reference: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          booking_id?: string | null
+          consumed_at?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          kind?: string
+          method?: string
+          reference?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vouchers_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
