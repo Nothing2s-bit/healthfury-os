@@ -306,6 +306,16 @@ function ScanPage() {
           </p>
         )}
 
+        {!result && (
+          <PayGate
+            kind="scan"
+            userId={userId}
+            voucher={voucher}
+            onVoucher={setVoucher}
+            note="Each AI health scan costs one R15.00 voucher. Pay once, then run your scan."
+          />
+        )}
+
         {result && (
           <div className="mt-5 space-y-3 rounded-xl border border-[oklch(0.82_0.1_80)] bg-white/85 p-4 shadow-sm">
             <div className="flex items-center justify-between gap-2">
