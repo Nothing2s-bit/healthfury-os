@@ -349,6 +349,22 @@ function PatientsPage() {
           </button>
         </div>
 
+        <div className="mt-2 flex gap-2">
+          <button
+            onClick={exportCsv}
+            className="flex flex-1 items-center justify-center gap-1 rounded-lg border-2 border-[oklch(0.72_0.14_75)] bg-white/80 px-3 py-2 font-display text-[11px] uppercase tracking-wider text-[oklch(0.45_0.12_65)]"
+          >
+            <Download className="h-4 w-4" /> Export CSV
+          </button>
+          <button
+            onClick={sendToDoh}
+            disabled={sending}
+            className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-gradient-to-b from-[oklch(0.6_0.13_155)] to-[oklch(0.45_0.12_155)] px-3 py-2 font-display text-[11px] uppercase tracking-wider text-white shadow disabled:opacity-60"
+          >
+            <Send className="h-4 w-4" /> {sending ? "Sending…" : "Send to DOH"}
+          </button>
+        </div>
+
         {msg && <p className="mt-2 text-xs text-muted-foreground">{msg}</p>}
 
         {showForm && (
@@ -400,6 +416,17 @@ function PatientsPage() {
               className="rounded-lg border border-[oklch(0.82_0.1_80)] bg-white px-3 py-2 text-sm sm:col-span-2"
               rows={3}
             />
+            <label className="flex items-center gap-2 rounded-lg border border-dashed border-[oklch(0.82_0.1_80)] bg-white px-3 py-2 text-xs text-muted-foreground sm:col-span-2">
+              <Camera className="h-4 w-4 text-[oklch(0.6_0.15_65)]" />
+              {photo ? photo.name : "Patient photo (camera or file)"}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                hidden
+                onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
+              />
+            </label>
             <button
               disabled={saving}
               className="rounded-lg bg-gradient-to-b from-[oklch(0.78_0.14_78)] to-[oklch(0.55_0.12_60)] px-4 py-2 font-display text-sm uppercase tracking-wider text-white shadow disabled:opacity-60 sm:col-span-2"
@@ -440,6 +467,13 @@ function PatientsPage() {
 
               {openId === f.id && (
                 <div className="mt-3 space-y-3 border-t border-[oklch(0.9_0.05_85)] pt-3 text-sm">
+                  {photoUrls[f.id] && (
+                    <img
+                      src={photoUrls[f.id]}
+                      alt={`Patient photo of ${f.full_name}`}
+                      className="h-28 w-28 rounded-lg border-2 border-[oklch(0.72_0.14_75)] object-cover"
+                    />
+                  )}
                   <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
                     <Field label="Date of birth" value={f.date_of_birth} />
                     <Field label="Sex" value={f.sex} />
@@ -474,10 +508,24 @@ function PatientsPage() {
                     )}
                     <ul className="mt-1 space-y-1">
                       {(bookings[f.id] ?? []).map((b) => (
-                        <li key={b.id} className="text-xs text-muted-foreground">
-                          <strong>{b.appointment_date}</strong> {b.appointment_time} ·{" "}
-                          {b.department} · {clinics[b.clinic_id] ?? "Clinic"} ·{" "}
-                          <span className="font-mono">{b.reference_code}</span> ({b.status})
+                        <li
+                          key={b.id}
+                          className="flex items-start gap-3 rounded-lg border border-[oklch(0.9_0.05_85)] bg-white/70 p-2 text-xs text-muted-foreground"
+                        >
+                          {qrCodes[b.id] && (
+                            <img
+                              src={qrCodes[b.id]}
+                              alt={`Booking QR code ${b.reference_code}`}
+                              className="h-20 w-20 shrink-0 rounded border border-[oklch(0.82_0.1_80)]"
+                            />
+                          )}
+                          <span>
+                            <strong>{b.appointment_date}</strong> {b.appointment_time}
+                            <br />
+                            {b.department} · {clinics[b.clinic_id] ?? "Clinic"}
+                            <br />
+                            <span className="font-mono">{b.reference_code}</span> ({b.status})
+                          </span>
                         </li>
                       ))}
                     </ul>
