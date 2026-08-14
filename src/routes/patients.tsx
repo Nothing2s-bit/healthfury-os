@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { supabase } from "@/integrations/supabase/client";
 import { HieroFrame } from "@/components/HieroFrame";
@@ -104,6 +104,7 @@ function PatientsPage() {
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   const [qrCodes, setQrCodes] = useState<Record<string, string>>({});
   const [sending, setSending] = useState(false);
+  const shownRef = useRef<PatientFile[]>([]);
 
   const load = useCallback(async () => {
     const { data } = await supabase
@@ -310,6 +311,7 @@ function PatientsPage() {
           (f.id_number ?? "").toLowerCase().includes(q),
       )
     : files;
+  shownRef.current = shown;
 
   return (
     <HieroFrame className="pb-16">
