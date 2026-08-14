@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
+import QRCode from "qrcode";
 import { supabase } from "@/integrations/supabase/client";
 import { HieroFrame } from "@/components/HieroFrame";
 import { AnkhLogo } from "@/components/AnkhLogo";
-import { FolderOpen, Loader2, Search, UserPlus, CalendarClock } from "lucide-react";
+import { FolderOpen, Loader2, Search, UserPlus, CalendarClock, Download, Send, Camera } from "lucide-react";
+import { toCsv, downloadCsv, submitToDoh } from "@/lib/patient-export";
 
 export const Route = createFileRoute("/patients")({
   head: () => ({
@@ -47,6 +49,7 @@ type PatientFile = {
   notes: string | null;
   address: string | null;
   area_code: string | null;
+  photo_path: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -59,6 +62,7 @@ type BookingRow = {
   reference_code: string;
   status: string;
   clinic_id: string;
+  qr_payload: string;
 };
 
 const STAFF_ROLES = ["doctor", "nurse", "admin"];
@@ -96,6 +100,10 @@ function PatientsPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
+  const [qrCodes, setQrCodes] = useState<Record<string, string>>({});
+  const [sending, setSending] = useState(false);
 
   const load = useCallback(async () => {
     const { data } = await supabase
@@ -151,10 +159,58 @@ function PatientsPage() {
     if (next && !bookings[file.id] && file.patient_id) {
       const { data } = await supabase
         .from("bookings")
-        .select("id,department,appointment_date,appointment_time,reference_code,status,clinic_id")
+        .select("id,department,appointment_date,appointment_time,reference_code,status,clinic_id,qr_payload")
         .eq("patient_id", file.patient_id)
         .order("appointment_date", { ascending: false });
-      setBookings((prev) => ({ ...prev, [file.id]: (data ?? []) as BookingRow[] }));
+      const rows = (data ?? []) as BookingRow[];
+      setBookings((prev) => ({ ...prev, [file.id]: rows }));
+      const codes: Record<string, string> = {};
+      for (const b of rows.slice(0, 6)) {
+        codes[b.id] = await QRCode.toDataURL(b.qr_payload || b.reference_code, {
+          margin: 1,
+          width: 220,
+          color: { dark: "#3a2a10", light: "#fdf6e3" },
+        });
+      }
+      setQrCodes((prev) => ({ ...prev, ...codes }));
+    }
+    if (next && file.photo_path && !photoUrls[file.id]) {
+      const { data } = await supabase.storage
+        .from("patient-photos")
+        .createSignedUrl(file.photo_path, 3600);
+      if (data?.signedUrl) setPhotoUrls((prev) => ({ ...prev, [file.id]: data.signedUrl }));
+    }
+  }
+
+  function exportCsv() {
+    const columns = [
+      "mrn","full_name","date_of_birth","sex","id_number","phone","chief_complaint",
+      "condition","status","bp","hr","temp","spo2","allergies","medications",
+      "address","area_code","created_at",
+    ];
+    const rows = shownRef.current.map((f) => ({
+      ...f,
+      allergies: f.allergies.join("; "),
+      medications: f.medications.join("; "),
+    }));
+    downloadCsv(`healthfury-patient-files-${new Date().toISOString().slice(0, 10)}.csv`, toCsv(rows, columns));
+  }
+
+  async function sendToDoh() {
+    setSending(true);
+    setMsg(null);
+    try {
+      const reference = await submitToDoh({
+        reportType: "patient_files",
+        rowCount: shownRef.current.length,
+        submittedBy: userId,
+        note: "Patient file register exported from HealthFury OS.",
+      });
+      setMsg(`Sent ${shownRef.current.length} records to DOH · ${reference}`);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Could not submit to DOH.");
+    } finally {
+      setSending(false);
     }
   }
 
@@ -168,7 +224,7 @@ function PatientsPage() {
     setSaving(true);
     setMsg(null);
     const mrn = form.mrn.trim() || `MRN-${Date.now().toString(36).toUpperCase().slice(-6)}`;
-    const { error } = await supabase.from("patient_files").insert({
+    const { data: created, error } = await supabase.from("patient_files").insert({
       mrn,
       captured_by: userId,
       full_name: form.full_name.trim(),
@@ -190,12 +246,22 @@ function PatientsPage() {
       notes: form.notes || null,
       address: form.address || null,
       area_code: form.area_code || null,
-    });
-    setSaving(false);
+    }).select("id").single();
     if (error) {
+      setSaving(false);
       setMsg(error.message);
       return;
     }
+    if (photo && created?.id) {
+      const ext = photo.name.split(".").pop() || "jpg";
+      const path = `${created.id}/photo.${ext}`;
+      const up = await supabase.storage.from("patient-photos").upload(path, photo, { upsert: true });
+      if (!up.error) {
+        await supabase.from("patient_files").update({ photo_path: path }).eq("id", created.id);
+      }
+    }
+    setSaving(false);
+    setPhoto(null);
     setForm({ ...EMPTY });
     setShowForm(false);
     setMsg(`Patient file ${mrn} captured.`);
