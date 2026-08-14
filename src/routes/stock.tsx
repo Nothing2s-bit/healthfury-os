@@ -34,6 +34,7 @@ type StockItem = {
   quantity_on_hand: number;
   reorder_level: number;
   location: string | null;
+  department: string;
   updated_at: string;
 };
 
@@ -50,6 +51,8 @@ type Delivery = {
 };
 
 const STAFF_ROLES = ["doctor", "nurse", "admin", "storage_manager", "minister"];
+const DEPARTMENTS = ["Pharmacy", "Laboratory", "Theatre", "Maternity", "EMS", "General Stores"];
+const MEDICINE_CATEGORIES = ["medicine"];
 
 function StockPage() {
   const [roles, setRoles] = useState<string[] | null>(null);
@@ -61,6 +64,8 @@ function StockPage() {
   const [form, setForm] = useState({ itemId: "", quantity: "", supplier: "", destination: "", note: "" });
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [dept, setDept] = useState<string>("Pharmacy");
+  const [kind, setKind] = useState<"medicine" | "tools">("medicine");
 
   const canManage = !!roles?.some((r) => r === "admin" || r === "storage_manager");
   const isStaff = !!roles?.some((r) => STAFF_ROLES.includes(r));
@@ -124,6 +129,17 @@ function StockPage() {
     () => items.filter((i) => i.quantity_on_hand <= i.reorder_level),
     [items],
   );
+
+  const deptItems = useMemo(() => items.filter((i) => i.department === dept), [items, dept]);
+  const medicines = useMemo(
+    () => deptItems.filter((i) => MEDICINE_CATEGORIES.includes(i.category)),
+    [deptItems],
+  );
+  const tools = useMemo(
+    () => deptItems.filter((i) => !MEDICINE_CATEGORIES.includes(i.category)),
+    [deptItems],
+  );
+  const visible = kind === "medicine" ? medicines : tools;
 
   async function recordDelivery(e: React.FormEvent) {
     e.preventDefault();
@@ -228,6 +244,44 @@ function StockPage() {
           <h2 className="flex items-center gap-2 font-display text-sm font-bold uppercase tracking-wider text-[oklch(0.4_0.12_65)]">
             <Package className="h-4 w-4" /> Stock on hand
           </h2>
+
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {DEPARTMENTS.map((d) => (
+              <button
+                key={d}
+                onClick={() => setDept(d)}
+                className={`rounded-full border px-3 py-1 font-display text-[10px] uppercase tracking-wider ${
+                  dept === d
+                    ? "border-[oklch(0.6_0.15_65)] bg-[oklch(0.95_0.06_85)] text-[oklch(0.4_0.12_65)]"
+                    : "border-[oklch(0.86_0.06_82)] text-muted-foreground"
+                }`}
+              >
+                {d}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-2 flex gap-1.5">
+            {(
+              [
+                ["medicine", `Medicines (${medicines.length})`],
+                ["tools", `Tools & consumables (${tools.length})`],
+              ] as const
+            ).map(([k, label]) => (
+              <button
+                key={k}
+                onClick={() => setKind(k)}
+                className={`flex-1 rounded-lg border-2 px-3 py-1.5 font-display text-[11px] uppercase tracking-wider ${
+                  kind === k
+                    ? "border-[oklch(0.72_0.14_75)] bg-white text-[oklch(0.4_0.12_65)] shadow"
+                    : "border-transparent bg-white/50 text-muted-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           <div className="mt-2 overflow-x-auto rounded-xl border-2 border-[oklch(0.82_0.1_80)] bg-white/80">
             <table className="w-full min-w-[520px] text-left text-sm">
               <thead className="bg-[oklch(0.95_0.05_85)] font-display text-[11px] uppercase tracking-wider text-[oklch(0.4_0.12_65)]">
@@ -239,7 +293,7 @@ function StockPage() {
                 </tr>
               </thead>
               <tbody>
-                {items.map((i) => {
+                {visible.map((i) => {
                   const low = i.quantity_on_hand <= i.reorder_level;
                   return (
                     <tr key={i.id} className="border-t border-[oklch(0.9_0.05_85)]">
@@ -257,6 +311,13 @@ function StockPage() {
                     </tr>
                   );
                 })}
+                {visible.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-3 py-3 text-xs text-muted-foreground">
+                      No {kind === "medicine" ? "medicines" : "tools or consumables"} in {dept}.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

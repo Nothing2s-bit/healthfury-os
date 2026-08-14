@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import QRCode from "qrcode";
 import { supabase } from "@/integrations/supabase/client";
 import { HieroFrame } from "@/components/HieroFrame";
 import { AnkhLogo } from "@/components/AnkhLogo";
-import { FolderOpen, Loader2, Search, UserPlus, CalendarClock } from "lucide-react";
+import { FolderOpen, Loader2, Search, UserPlus, CalendarClock, Download, Send, Camera } from "lucide-react";
+import { toCsv, downloadCsv, submitToDoh } from "@/lib/patient-export";
 
 export const Route = createFileRoute("/patients")({
   head: () => ({
@@ -47,6 +49,7 @@ type PatientFile = {
   notes: string | null;
   address: string | null;
   area_code: string | null;
+  photo_path: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -59,6 +62,7 @@ type BookingRow = {
   reference_code: string;
   status: string;
   clinic_id: string;
+  qr_payload: string;
 };
 
 const STAFF_ROLES = ["doctor", "nurse", "admin"];
@@ -96,6 +100,11 @@ function PatientsPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
+  const [qrCodes, setQrCodes] = useState<Record<string, string>>({});
+  const [sending, setSending] = useState(false);
+  const shownRef = useRef<PatientFile[]>([]);
 
   const load = useCallback(async () => {
     const { data } = await supabase
@@ -151,10 +160,58 @@ function PatientsPage() {
     if (next && !bookings[file.id] && file.patient_id) {
       const { data } = await supabase
         .from("bookings")
-        .select("id,department,appointment_date,appointment_time,reference_code,status,clinic_id")
+        .select("id,department,appointment_date,appointment_time,reference_code,status,clinic_id,qr_payload")
         .eq("patient_id", file.patient_id)
         .order("appointment_date", { ascending: false });
-      setBookings((prev) => ({ ...prev, [file.id]: (data ?? []) as BookingRow[] }));
+      const rows = (data ?? []) as BookingRow[];
+      setBookings((prev) => ({ ...prev, [file.id]: rows }));
+      const codes: Record<string, string> = {};
+      for (const b of rows.slice(0, 6)) {
+        codes[b.id] = await QRCode.toDataURL(b.qr_payload || b.reference_code, {
+          margin: 1,
+          width: 220,
+          color: { dark: "#3a2a10", light: "#fdf6e3" },
+        });
+      }
+      setQrCodes((prev) => ({ ...prev, ...codes }));
+    }
+    if (next && file.photo_path && !photoUrls[file.id]) {
+      const { data } = await supabase.storage
+        .from("patient-photos")
+        .createSignedUrl(file.photo_path, 3600);
+      if (data?.signedUrl) setPhotoUrls((prev) => ({ ...prev, [file.id]: data.signedUrl }));
+    }
+  }
+
+  function exportCsv() {
+    const columns = [
+      "mrn","full_name","date_of_birth","sex","id_number","phone","chief_complaint",
+      "condition","status","bp","hr","temp","spo2","allergies","medications",
+      "address","area_code","created_at",
+    ];
+    const rows = shownRef.current.map((f) => ({
+      ...f,
+      allergies: f.allergies.join("; "),
+      medications: f.medications.join("; "),
+    }));
+    downloadCsv(`healthfury-patient-files-${new Date().toISOString().slice(0, 10)}.csv`, toCsv(rows, columns));
+  }
+
+  async function sendToDoh() {
+    setSending(true);
+    setMsg(null);
+    try {
+      const reference = await submitToDoh({
+        reportType: "patient_files",
+        rowCount: shownRef.current.length,
+        submittedBy: userId,
+        note: "Patient file register exported from HealthFury OS.",
+      });
+      setMsg(`Sent ${shownRef.current.length} records to DOH · ${reference}`);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Could not submit to DOH.");
+    } finally {
+      setSending(false);
     }
   }
 
@@ -168,7 +225,7 @@ function PatientsPage() {
     setSaving(true);
     setMsg(null);
     const mrn = form.mrn.trim() || `MRN-${Date.now().toString(36).toUpperCase().slice(-6)}`;
-    const { error } = await supabase.from("patient_files").insert({
+    const { data: created, error } = await supabase.from("patient_files").insert({
       mrn,
       captured_by: userId,
       full_name: form.full_name.trim(),
@@ -190,12 +247,22 @@ function PatientsPage() {
       notes: form.notes || null,
       address: form.address || null,
       area_code: form.area_code || null,
-    });
-    setSaving(false);
+    }).select("id").single();
     if (error) {
+      setSaving(false);
       setMsg(error.message);
       return;
     }
+    if (photo && created?.id) {
+      const ext = photo.name.split(".").pop() || "jpg";
+      const path = `${created.id}/photo.${ext}`;
+      const up = await supabase.storage.from("patient-photos").upload(path, photo, { upsert: true });
+      if (!up.error) {
+        await supabase.from("patient_files").update({ photo_path: path }).eq("id", created.id);
+      }
+    }
+    setSaving(false);
+    setPhoto(null);
     setForm({ ...EMPTY });
     setShowForm(false);
     setMsg(`Patient file ${mrn} captured.`);
@@ -244,6 +311,7 @@ function PatientsPage() {
           (f.id_number ?? "").toLowerCase().includes(q),
       )
     : files;
+  shownRef.current = shown;
 
   return (
     <HieroFrame className="pb-16">
@@ -278,6 +346,22 @@ function PatientsPage() {
             className="flex items-center gap-1 rounded-lg bg-gradient-to-b from-[oklch(0.78_0.14_78)] to-[oklch(0.55_0.12_60)] px-3 py-2 font-display text-xs uppercase tracking-wider text-white shadow"
           >
             <UserPlus className="h-4 w-4" /> Capture
+          </button>
+        </div>
+
+        <div className="mt-2 flex gap-2">
+          <button
+            onClick={exportCsv}
+            className="flex flex-1 items-center justify-center gap-1 rounded-lg border-2 border-[oklch(0.72_0.14_75)] bg-white/80 px-3 py-2 font-display text-[11px] uppercase tracking-wider text-[oklch(0.45_0.12_65)]"
+          >
+            <Download className="h-4 w-4" /> Export CSV
+          </button>
+          <button
+            onClick={sendToDoh}
+            disabled={sending}
+            className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-gradient-to-b from-[oklch(0.6_0.13_155)] to-[oklch(0.45_0.12_155)] px-3 py-2 font-display text-[11px] uppercase tracking-wider text-white shadow disabled:opacity-60"
+          >
+            <Send className="h-4 w-4" /> {sending ? "Sending…" : "Send to DOH"}
           </button>
         </div>
 
@@ -332,6 +416,17 @@ function PatientsPage() {
               className="rounded-lg border border-[oklch(0.82_0.1_80)] bg-white px-3 py-2 text-sm sm:col-span-2"
               rows={3}
             />
+            <label className="flex items-center gap-2 rounded-lg border border-dashed border-[oklch(0.82_0.1_80)] bg-white px-3 py-2 text-xs text-muted-foreground sm:col-span-2">
+              <Camera className="h-4 w-4 text-[oklch(0.6_0.15_65)]" />
+              {photo ? photo.name : "Patient photo (camera or file)"}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                hidden
+                onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
+              />
+            </label>
             <button
               disabled={saving}
               className="rounded-lg bg-gradient-to-b from-[oklch(0.78_0.14_78)] to-[oklch(0.55_0.12_60)] px-4 py-2 font-display text-sm uppercase tracking-wider text-white shadow disabled:opacity-60 sm:col-span-2"
@@ -372,6 +467,13 @@ function PatientsPage() {
 
               {openId === f.id && (
                 <div className="mt-3 space-y-3 border-t border-[oklch(0.9_0.05_85)] pt-3 text-sm">
+                  {photoUrls[f.id] && (
+                    <img
+                      src={photoUrls[f.id]}
+                      alt={`Patient photo of ${f.full_name}`}
+                      className="h-28 w-28 rounded-lg border-2 border-[oklch(0.72_0.14_75)] object-cover"
+                    />
+                  )}
                   <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
                     <Field label="Date of birth" value={f.date_of_birth} />
                     <Field label="Sex" value={f.sex} />
@@ -406,10 +508,24 @@ function PatientsPage() {
                     )}
                     <ul className="mt-1 space-y-1">
                       {(bookings[f.id] ?? []).map((b) => (
-                        <li key={b.id} className="text-xs text-muted-foreground">
-                          <strong>{b.appointment_date}</strong> {b.appointment_time} ·{" "}
-                          {b.department} · {clinics[b.clinic_id] ?? "Clinic"} ·{" "}
-                          <span className="font-mono">{b.reference_code}</span> ({b.status})
+                        <li
+                          key={b.id}
+                          className="flex items-start gap-3 rounded-lg border border-[oklch(0.9_0.05_85)] bg-white/70 p-2 text-xs text-muted-foreground"
+                        >
+                          {qrCodes[b.id] && (
+                            <img
+                              src={qrCodes[b.id]}
+                              alt={`Booking QR code ${b.reference_code}`}
+                              className="h-20 w-20 shrink-0 rounded border border-[oklch(0.82_0.1_80)]"
+                            />
+                          )}
+                          <span>
+                            <strong>{b.appointment_date}</strong> {b.appointment_time}
+                            <br />
+                            {b.department} · {clinics[b.clinic_id] ?? "Clinic"}
+                            <br />
+                            <span className="font-mono">{b.reference_code}</span> ({b.status})
+                          </span>
                         </li>
                       ))}
                     </ul>
