@@ -7,6 +7,9 @@ import { AnkhLogo } from "@/components/AnkhLogo";
 import { analyzeHealthScan } from "@/lib/scan.functions";
 import type { ScanResult } from "@/lib/scan.server";
 import { logScan } from "@/lib/audit";
+import { supabase } from "@/integrations/supabase/client";
+import { PayGate } from "@/components/PayGate";
+import { consumeVoucher, type Voucher } from "@/lib/vouchers";
 
 export const Route = createFileRoute("/scan")({
   head: () => ({
@@ -48,6 +51,18 @@ function ScanPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ScanResult | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [voucher, setVoucher] = useState<Voucher | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void supabase.auth.getUser().then(({ data }) => {
+      if (!cancelled) setUserId(data.user?.id ?? null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const analyze = useServerFn(analyzeHealthScan);
 
@@ -110,12 +125,14 @@ function ScanPage() {
   };
 
   const runScan = async () => {
-    if (!shot) return;
+    if (!shot || !voucher) return;
     setBusy(true);
     setError(null);
     try {
       const mimeType = shot.slice(5, shot.indexOf(";")) || "image/jpeg";
       const data = await analyze({ data: { imageDataUrl: shot, mimeType, notes: notes || undefined } });
+      await consumeVoucher(voucher.id);
+      setVoucher(null);
       setResult(data as ScanResult);
       void logScan({
         scanType: "health",
@@ -262,7 +279,7 @@ function ScanPage() {
               </button>
               <button
                 type="button"
-                disabled={busy}
+                disabled={busy || !voucher}
                 onClick={runScan}
                 className="flex h-11 items-center gap-1.5 rounded-full bg-gradient-to-br from-[oklch(0.78_0.14_80)] to-[oklch(0.55_0.13_65)] px-5 font-display text-xs font-semibold uppercase tracking-wider text-white shadow disabled:opacity-40"
               >
