@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { HieroFrame } from "@/components/HieroFrame";
 import { AnkhLogo } from "@/components/AnkhLogo";
 import { MapPin, CalendarClock, CheckCircle2, Loader2, Building2, RefreshCw } from "lucide-react";
+import { PayGate } from "@/components/PayGate";
+import { consumeVoucher, type Voucher } from "@/lib/vouchers";
 
 export const Route = createFileRoute("/booking")({
   head: () => ({
@@ -93,6 +95,7 @@ function BookingPage() {
   const [loadingClinics, setLoadingClinics] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [voucher, setVoucher] = useState<Voucher | null>(null);
   const [confirmation, setConfirmation] = useState<null | {
     reference: string;
     clinicName: string;
@@ -214,7 +217,7 @@ function BookingPage() {
   const isFull = selected ? selected.bookedToday >= selected.daily_capacity : false;
 
   async function handleBook() {
-    if (!userId || !selected) return;
+    if (!userId || !selected || !voucher) return;
     setErrorMsg(null);
     setSubmitting(true);
     try {
@@ -232,7 +235,7 @@ function BookingPage() {
         issuedAt: new Date().toISOString(),
       });
 
-      const { error } = await supabase.from("bookings").insert({
+      const { data: created, error } = await supabase.from("bookings").insert({
         patient_id: userId,
         clinic_id: selected.id,
         department,
@@ -241,8 +244,10 @@ function BookingPage() {
         reference_code: reference,
         qr_payload: qrPayload,
         status: "confirmed",
-      });
+      }).select("id").single();
       if (error) throw error;
+      await consumeVoucher(voucher.id, created?.id);
+      setVoucher(null);
 
       const qrDataUrl = await QRCode.toDataURL(qrPayload, {
         margin: 1,
@@ -500,8 +505,16 @@ function BookingPage() {
           </div>
         )}
 
+        <PayGate
+          kind="booking"
+          userId={userId}
+          voucher={voucher}
+          onVoucher={setVoucher}
+          note="Each clinic booking costs one R5.00 voucher. Pay once, then book your slot."
+        />
+
         <button
-          disabled={!selected || submitting || isFull}
+          disabled={!selected || submitting || isFull || !voucher}
           onClick={handleBook}
           className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[oklch(0.78_0.14_78)] to-[oklch(0.5_0.12_55)] px-4 py-3 font-display text-sm font-bold uppercase tracking-wider text-white shadow-lg disabled:opacity-50"
         >

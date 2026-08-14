@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VaccinesRouteImport } from './routes/vaccines'
 import { Route as StockRouteImport } from './routes/stock'
 import { Route as ScanRouteImport } from './routes/scan'
 import { Route as RegisterRouteImport } from './routes/register'
@@ -23,6 +24,11 @@ import { Route as AuditRouteImport } from './routes/audit'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 
+const VaccinesRoute = VaccinesRouteImport.update({
+  id: '/vaccines',
+  path: '/vaccines',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StockRoute = StockRouteImport.update({
   id: '/stock',
   path: '/stock',
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/scan': typeof ScanRoute
   '/stock': typeof StockRoute
+  '/vaccines': typeof VaccinesRoute
   '/api/chat': typeof ApiChatRoute
 }
 export interface FileRoutesByTo {
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/scan': typeof ScanRoute
   '/stock': typeof StockRoute
+  '/vaccines': typeof VaccinesRoute
   '/api/chat': typeof ApiChatRoute
 }
 export interface FileRoutesById {
@@ -133,6 +141,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/scan': typeof ScanRoute
   '/stock': typeof StockRoute
+  '/vaccines': typeof VaccinesRoute
   '/api/chat': typeof ApiChatRoute
 }
 export interface FileRouteTypes {
@@ -150,6 +159,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/scan'
     | '/stock'
+    | '/vaccines'
     | '/api/chat'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/scan'
     | '/stock'
+    | '/vaccines'
     | '/api/chat'
   id:
     | '__root__'
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/scan'
     | '/stock'
+    | '/vaccines'
     | '/api/chat'
   fileRoutesById: FileRoutesById
 }
@@ -196,11 +208,19 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   ScanRoute: typeof ScanRoute
   StockRoute: typeof StockRoute
+  VaccinesRoute: typeof VaccinesRoute
   ApiChatRoute: typeof ApiChatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/vaccines': {
+      id: '/vaccines'
+      path: '/vaccines'
+      fullPath: '/vaccines'
+      preLoaderRoute: typeof VaccinesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/stock': {
       id: '/stock'
       path: '/stock'
@@ -308,6 +328,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   ScanRoute: ScanRoute,
   StockRoute: StockRoute,
+  VaccinesRoute: VaccinesRoute,
   ApiChatRoute: ApiChatRoute,
 }
 export const routeTree = rootRouteImport

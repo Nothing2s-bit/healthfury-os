@@ -225,6 +225,7 @@ function PatientsPage() {
           </p>
           <Link
             to="/register"
+            search={{ role: "patient" }}
             className="mt-5 inline-block rounded-lg bg-gradient-to-b from-[oklch(0.78_0.14_78)] to-[oklch(0.55_0.12_60)] px-5 py-2 font-display text-sm uppercase tracking-wider text-white shadow"
           >
             Sign in as staff
