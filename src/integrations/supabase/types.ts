@@ -419,6 +419,72 @@ export type Database = {
           },
         ]
       }
+      misconduct_reports: {
+        Row: {
+          anonymous: boolean
+          category: string
+          created_at: string
+          description: string
+          facility: string | null
+          id: string
+          incident_at: string | null
+          location: string | null
+          reference: string
+          reporter_id: string | null
+          reporter_name: string | null
+          resolution_note: string | null
+          reviewed_by: string | null
+          reviewed_by_name: string | null
+          severity: string
+          status: string
+          subject_name: string | null
+          subject_role: string | null
+          updated_at: string
+        }
+        Insert: {
+          anonymous?: boolean
+          category: string
+          created_at?: string
+          description: string
+          facility?: string | null
+          id?: string
+          incident_at?: string | null
+          location?: string | null
+          reference: string
+          reporter_id?: string | null
+          reporter_name?: string | null
+          resolution_note?: string | null
+          reviewed_by?: string | null
+          reviewed_by_name?: string | null
+          severity?: string
+          status?: string
+          subject_name?: string | null
+          subject_role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          anonymous?: boolean
+          category?: string
+          created_at?: string
+          description?: string
+          facility?: string | null
+          id?: string
+          incident_at?: string | null
+          location?: string | null
+          reference?: string
+          reporter_id?: string | null
+          reporter_name?: string | null
+          resolution_note?: string | null
+          reviewed_by?: string | null
+          reviewed_by_name?: string | null
+          severity?: string
+          status?: string
+          subject_name?: string | null
+          subject_role?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       patient_files: {
         Row: {
           address: string | null
