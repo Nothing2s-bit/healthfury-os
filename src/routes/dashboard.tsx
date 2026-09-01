@@ -16,6 +16,7 @@ import {
   FileBarChart,
   Pill,
   ScanLine,
+  Flag,
 } from "lucide-react";
 import { AnkhLogo } from "@/components/AnkhLogo";
 import { HieroFrame } from "@/components/HieroFrame";
@@ -45,6 +46,7 @@ const tiles = [
   { icon: FlaskConical, label: "Lab", to: "/lab", accent: "gold" as const },
   { icon: Video, label: "Telemedicine", to: "/messages", accent: "gold" as const },
   { icon: Sparkles, label: "AI Triage", to: "/chat", accent: "gold" as const },
+  { icon: Flag, label: "Flag", to: "/flag", accent: "red" as const },
 ];
 
 function Dashboard() {
