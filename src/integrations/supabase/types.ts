@@ -232,6 +232,8 @@ export type Database = {
           patient_file_id: string | null
           patient_name: string
           priority: string
+          result_detail: Json | null
+          result_flag: string | null
           result_summary: string | null
           resulted_at: string | null
           status: string
@@ -247,6 +249,8 @@ export type Database = {
           patient_file_id?: string | null
           patient_name: string
           priority?: string
+          result_detail?: Json | null
+          result_flag?: string | null
           result_summary?: string | null
           resulted_at?: string | null
           status?: string
@@ -262,6 +266,8 @@ export type Database = {
           patient_file_id?: string | null
           patient_name?: string
           priority?: string
+          result_detail?: Json | null
+          result_flag?: string | null
           result_summary?: string | null
           resulted_at?: string | null
           status?: string
@@ -482,6 +488,45 @@ export type Database = {
           subject_name?: string | null
           subject_role?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          entity_id: string | null
+          id: string
+          kind: string
+          link: string | null
+          read_at: string | null
+          title: string
+          urgency: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          entity_id?: string | null
+          id?: string
+          kind?: string
+          link?: string | null
+          read_at?: string | null
+          title: string
+          urgency?: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          entity_id?: string | null
+          id?: string
+          kind?: string
+          link?: string | null
+          read_at?: string | null
+          title?: string
+          urgency?: string
+          user_id?: string
         }
         Relationships: []
       }
