@@ -80,7 +80,7 @@ export const runLabOrderAnalysis = createServerFn({ method: "POST" })
       .update({
         status: "resulted",
         result_summary: summary,
-        result_detail: result as unknown as Record<string, unknown>,
+        result_detail: JSON.parse(JSON.stringify(result)),
         result_flag: result.overallFlag,
         resulted_at: resultedAt,
       })
