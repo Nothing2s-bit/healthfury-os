@@ -18,6 +18,8 @@ export type Database = {
         Row: {
           appointment_date: string
           appointment_time: string
+          checked_in_at: string | null
+          checked_in_by: string | null
           clinic_id: string
           created_at: string
           department: string
@@ -32,6 +34,8 @@ export type Database = {
         Insert: {
           appointment_date: string
           appointment_time: string
+          checked_in_at?: string | null
+          checked_in_by?: string | null
           clinic_id: string
           created_at?: string
           department: string
@@ -46,6 +50,8 @@ export type Database = {
         Update: {
           appointment_date?: string
           appointment_time?: string
+          checked_in_at?: string | null
+          checked_in_by?: string | null
           clinic_id?: string
           created_at?: string
           department?: string
