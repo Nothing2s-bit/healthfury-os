@@ -35,7 +35,8 @@ export const Route = createFileRoute("/dashboard")({
 const tiles = [
   { icon: UserRound, label: "Nurse", to: "/register?role=nurse", accent: "red" as const },
   { icon: Stethoscope, label: "Doctor", to: "/register?role=doctor", accent: "red" as const },
-  { icon: ShieldCheck, label: "Admin", to: "/register?role=admin", accent: "gold" as const },
+  { icon: ShieldCheck, label: "Admin", to: "/admin", accent: "gold" as const },
+  { icon: ScanLine, label: "Verify QR", to: "/admin", accent: "gold" as const },
   { icon: Package, label: "Stock", to: "/stock", accent: "red" as const },
   { icon: Users, label: "Booking", to: "/booking", accent: "gold" as const },
   { icon: FileBarChart, label: "Files", to: "/patients", accent: "gold" as const },
