@@ -199,7 +199,7 @@ function HistoryPanel({
         {!signedIn && (
           <p className="mt-4 rounded-md bg-white p-3 text-[11px] text-muted-foreground ring-1 ring-[oklch(0.82_0.1_80)]">
             Sign in to save your triage sessions.{" "}
-            <Link to="/register" className="underline">
+            <Link to="/register" search={{ role: "patient" }} className="underline">
               Register
             </Link>
           </p>
