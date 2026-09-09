@@ -32,12 +32,12 @@ export const Route = createFileRoute("/doctor")({
 });
 
 const tools = [
-  { icon: Video, label: "Consult", to: "/chat", accent: "gold" as const },
+  { icon: Video, label: "AI Triage", to: "/chat", accent: "gold" as const },
   { icon: Pill, label: "Prescribe", accent: "gold" as const },
   { icon: FlaskConical, label: "Lab Results", accent: "gold" as const },
   { icon: ClipboardList, label: "History", accent: "red" as const },
   { icon: CalendarDays, label: "Schedule", accent: "gold" as const },
-  { icon: MessageCircle, label: "Messages", to: "/chat", accent: "gold" as const },
+  { icon: MessageCircle, label: "Messages", to: "/messages", accent: "gold" as const },
   { icon: Activity, label: "Vitals", accent: "red" as const },
   { icon: Stethoscope, label: "Referrals", accent: "gold" as const },
 ];

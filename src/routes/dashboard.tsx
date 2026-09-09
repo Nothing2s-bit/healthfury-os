@@ -46,7 +46,7 @@ const tiles = [
   { icon: Siren, label: "Emergency", to: "/scan", accent: "red" as const },
   { icon: FlaskConical, label: "Lab", to: "/lab", accent: "gold" as const },
   { icon: Video, label: "Telemedicine", to: "/messages", accent: "gold" as const },
-  { icon: Sparkles, label: "AI Triage", to: "/chat", accent: "gold" as const },
+  { icon: Sparkles, label: "AI TRIAGE", to: "/chat", accent: "gold" as const },
   { icon: Flag, label: "Flag", to: "/flag", accent: "red" as const },
 ];
 
