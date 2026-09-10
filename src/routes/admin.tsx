@@ -14,6 +14,7 @@ import {
   Search,
   ShieldCheck,
   Clock,
+  FileText,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
@@ -52,10 +53,32 @@ type BookingRow = {
   created_at: string;
 };
 
+type PatientFile = {
+  id: string;
+  mrn: string;
+  full_name: string;
+  date_of_birth: string | null;
+  sex: string | null;
+  phone: string | null;
+  chief_complaint: string | null;
+  condition: string | null;
+  status: string;
+  bp: string | null;
+  hr: string | null;
+  temp: string | null;
+  spo2: string | null;
+  allergies: string[];
+  medications: string[];
+  photo_path: string | null;
+};
+
 type Verified = {
   booking: BookingRow;
   clinicName: string;
   patientName: string;
+  file: PatientFile | null;
+  photoUrl: string | null;
+  history: BookingRow[];
 };
 
 function todayISO() {
@@ -164,7 +187,50 @@ function AdminScanPage() {
         } catch {
           /* ignore malformed payload */
         }
-        setResult({ booking: row, clinicName: clinic?.name ?? "Clinic", patientName });
+        // Pull the patient's digital file: by linked account first, then by name.
+        const fileCols =
+          "id,mrn,full_name,date_of_birth,sex,phone,chief_complaint,condition,status,bp,hr,temp,spo2,allergies,medications,photo_path";
+        let file: PatientFile | null = null;
+        const byId = await supabase
+          .from("patient_files")
+          .select(fileCols)
+          .eq("patient_id", row.patient_id)
+          .order("updated_at", { ascending: false })
+          .limit(1);
+        file = (byId.data?.[0] as PatientFile | undefined) ?? null;
+        if (!file && patientName !== "Patient") {
+          const byName = await supabase
+            .from("patient_files")
+            .select(fileCols)
+            .ilike("full_name", patientName)
+            .order("updated_at", { ascending: false })
+            .limit(1);
+          file = (byName.data?.[0] as PatientFile | undefined) ?? null;
+        }
+
+        let photoUrl: string | null = null;
+        if (file?.photo_path) {
+          const signed = await supabase.storage
+            .from("patient-photos")
+            .createSignedUrl(file.photo_path, 3600);
+          photoUrl = signed.data?.signedUrl ?? null;
+        }
+
+        const { data: history } = await supabase
+          .from("bookings")
+          .select("*")
+          .eq("patient_id", row.patient_id)
+          .order("appointment_date", { ascending: false })
+          .limit(6);
+
+        setResult({
+          booking: row,
+          clinicName: clinic?.name ?? "Clinic",
+          patientName: file?.full_name ?? patientName,
+          file,
+          photoUrl,
+          history: ((history ?? []) as BookingRow[]).filter((b) => b.id !== row.id),
+        });
         stopCamera();
       } catch (e) {
         setLookupError(e instanceof Error ? e.message : "Verification failed.");
@@ -417,6 +483,102 @@ function AdminScanPage() {
             {result.booking.appointment_date !== todayISO() && (
               <div className="mt-3 rounded-lg bg-[oklch(0.96_0.06_85)] p-2 text-xs text-[oklch(0.4_0.12_65)]">
                 Heads up: this booking is not for today.
+              </div>
+            )}
+
+            {/* Patient file pulled from the QR code */}
+            <div className="mt-4 rounded-xl border border-[oklch(0.85_0.08_80)] bg-[oklch(0.99_0.02_85)] p-3">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-[oklch(0.55_0.13_65)]" />
+                <h3 className="font-display text-sm font-bold uppercase tracking-wider text-[oklch(0.4_0.12_65)]">
+                  Patient File
+                </h3>
+              </div>
+              {result.file ? (
+                <>
+                  <div className="mt-2 flex gap-3">
+                    {result.photoUrl && (
+                      <img
+                        src={result.photoUrl}
+                        alt={`Patient photo of ${result.file.full_name}`}
+                        className="h-20 w-20 rounded-lg border border-[oklch(0.82_0.1_80)] object-cover"
+                      />
+                    )}
+                    <dl className="flex-1 grid gap-1 text-sm">
+                      <Row label="MRN" value={result.file.mrn} mono />
+                      <Row label="Name" value={result.file.full_name} />
+                      {result.file.date_of_birth && (
+                        <Row label="Date of birth" value={result.file.date_of_birth} />
+                      )}
+                      {result.file.sex && <Row label="Sex" value={result.file.sex} />}
+                      {result.file.phone && <Row label="Phone" value={result.file.phone} />}
+                    </dl>
+                  </div>
+                  <dl className="mt-1 grid gap-1 text-sm">
+                    <Row label="Status" value={result.file.status} />
+                    {result.file.condition && (
+                      <Row label="Condition" value={result.file.condition} />
+                    )}
+                    {result.file.chief_complaint && (
+                      <Row label="Complaint" value={result.file.chief_complaint} />
+                    )}
+                    <Row
+                      label="Vitals"
+                      value={[
+                        result.file.bp && `BP ${result.file.bp}`,
+                        result.file.hr && `HR ${result.file.hr}`,
+                        result.file.temp && `Temp ${result.file.temp}`,
+                        result.file.spo2 && `SpO₂ ${result.file.spo2}`,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || "Not recorded"}
+                    />
+                    <Row
+                      label="Allergies"
+                      value={result.file.allergies?.length ? result.file.allergies.join(", ") : "None recorded"}
+                    />
+                    <Row
+                      label="Medications"
+                      value={
+                        result.file.medications?.length
+                          ? result.file.medications.join(", ")
+                          : "None recorded"
+                      }
+                    />
+                  </dl>
+                  <Link
+                    to="/patients"
+                    className="mt-3 block rounded-lg border border-[oklch(0.82_0.1_80)] px-3 py-2 text-center text-xs uppercase tracking-wider text-[oklch(0.45_0.12_65)]"
+                  >
+                    Open full file
+                  </Link>
+                </>
+              ) : (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  No digital file yet for this patient. Create one on the patient records page.
+                </p>
+              )}
+            </div>
+
+            {result.history.length > 0 && (
+              <div className="mt-3">
+                <h3 className="font-display text-xs font-bold uppercase tracking-wider text-[oklch(0.4_0.12_65)]">
+                  Previous bookings
+                </h3>
+                <ul className="mt-1 space-y-1">
+                  {result.history.map((h) => (
+                    <li
+                      key={h.id}
+                      className="flex items-center justify-between gap-2 rounded-lg bg-white/70 px-2 py-1 text-[11px] text-[oklch(0.4_0.1_60)]"
+                    >
+                      <span className="font-mono">{h.reference_code}</span>
+                      <span>
+                        {h.department} · {h.appointment_date}
+                      </span>
+                      <StatusPill status={h.status} />
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
 
