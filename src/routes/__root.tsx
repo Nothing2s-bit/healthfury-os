@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { HealthFuryBadge } from "@/components/HealthFuryBadge";
+import { NotificationBell } from "@/components/NotificationBell";
 
 function NotFoundComponent() {
   return (
@@ -136,6 +137,9 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <div className="fixed right-3 top-3 z-[60]">
+        <NotificationBell />
+      </div>
       <HealthFuryBadge />
     </QueryClientProvider>
   );

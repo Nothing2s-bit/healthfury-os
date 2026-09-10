@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Bell, Check, ExternalLink, X } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { pushState, registerPushWorker, requestPush, showPush, type PushState } from "@/lib/push";
 
 type Notification = {
   id: string;
@@ -28,24 +29,43 @@ export function NotificationBell() {
     setItems((data ?? []) as Notification[]);
   }
 
+  const [permission, setPermission] = useState<PushState>("default");
+
+  useEffect(() => {
+    setPermission(pushState());
+    if (typeof window !== "undefined" && Notification?.permission === "granted") {
+      void registerPushWorker();
+    }
+  }, []);
+
   useEffect(() => {
     let active = true;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
     void supabase.auth.getUser().then(({ data }) => {
       if (!active || !data.user) return;
-      setUserId(data.user.id);
-      void load(data.user.id);
-      const channel = supabase
-        .channel(`notifications-${data.user.id}`)
-        .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${data.user.id}` }, (payload) => {
-          setItems((current) => [payload.new as Notification, ...current].slice(0, 30));
+      const uid = data.user.id;
+      setUserId(uid);
+      void load(uid);
+      channel = supabase
+        .channel(`notifications-${uid}`)
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${uid}` }, (payload) => {
+          const row = payload.new as Notification;
+          setItems((current) => [row, ...current].slice(0, 30));
+          showPush({
+            title: row.title,
+            body: row.body,
+            link: row.link,
+            urgent: row.urgency === "critical" || row.urgency === "high",
+            tag: row.id,
+          });
         })
         .subscribe();
-      return () => {
-        supabase.removeChannel(channel);
-      };
     });
+
     return () => {
       active = false;
+      if (channel) supabase.removeChannel(channel);
     };
   }, []);
 
@@ -73,10 +93,28 @@ export function NotificationBell() {
           <div className="flex items-center justify-between border-b border-[oklch(0.86_0.06_82)] pb-2">
             <h2 className="font-display text-xs font-bold uppercase tracking-wider text-[oklch(0.4_0.12_65)]">Notifications</h2>
             <div className="flex items-center gap-2">
+              {permission !== "granted" && (
+                <button
+                  onClick={async () => setPermission(await requestPush())}
+                  className="rounded-full border border-[oklch(0.72_0.14_75)] px-2 py-0.5 text-[10px] font-semibold text-[oklch(0.4_0.12_65)]"
+                >
+                  Turn on alerts
+                </button>
+              )}
               {unread > 0 && <button onClick={markAllRead} title="Mark all as read" className="text-[10px] text-[oklch(0.5_0.12_65)]"><Check className="inline h-3 w-3" /> Read all</button>}
               <button aria-label="Close notifications" onClick={() => setOpen(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
             </div>
           </div>
+          {permission === "blocked-in-preview" && (
+            <p className="mt-2 rounded-md bg-[oklch(0.96_0.04_85)] px-2 py-1 text-[10px] text-[oklch(0.4_0.12_65)]">
+              Open the app in its own browser tab to allow pop-up alerts.
+            </p>
+          )}
+          {permission === "denied" && (
+            <p className="mt-2 rounded-md bg-[oklch(0.96_0.04_85)] px-2 py-1 text-[10px] text-[oklch(0.4_0.12_65)]">
+              Alerts are blocked. Enable notifications for this site in your browser settings.
+            </p>
+          )}
           <div className="max-h-80 overflow-y-auto">
             {items.length === 0 && <p className="py-5 text-center text-xs text-muted-foreground">No notifications yet.</p>}
             {items.map((item) => (
