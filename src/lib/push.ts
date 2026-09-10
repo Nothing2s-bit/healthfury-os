@@ -1,9 +1,16 @@
 /**
- * Browser push helpers: desktop/mobile notification popups + a short alert sound
- * for HealthFury alerts (lab results, chat messages, critical findings).
+ * Browser push helpers: service-worker backed notification popups + a short alert
+ * sound for HealthFury alerts (lab results, chat messages, critical findings).
+ *
+ * The service worker lets notifications appear while the tab is in the
+ * background, minimised or on a locked phone screen, and keeps them clickable
+ * after the tab is gone.
  */
 
 export type PushState = "unsupported" | "blocked-in-preview" | "default" | "granted" | "denied";
+
+let swRegistration: ServiceWorkerRegistration | null = null;
+let swPromise: Promise<ServiceWorkerRegistration | null> | null = null;
 
 export function pushState(): PushState {
   if (typeof window === "undefined" || !("Notification" in window)) return "unsupported";
@@ -13,12 +20,33 @@ export function pushState(): PushState {
   return Notification.permission as PushState;
 }
 
+export async function registerPushWorker(): Promise<ServiceWorkerRegistration | null> {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) return null;
+  if (swRegistration) return swRegistration;
+  if (!swPromise) {
+    swPromise = navigator.serviceWorker
+      .register("/sw.js", { scope: "/" })
+      .then(async (registration) => {
+        await navigator.serviceWorker.ready;
+        swRegistration = registration;
+        return registration;
+      })
+      .catch(() => null);
+  }
+  return swPromise;
+}
+
 export async function requestPush(): Promise<PushState> {
   const state = pushState();
+  if (state === "granted") {
+    void registerPushWorker();
+    return state;
+  }
   if (state !== "default") return state;
   try {
-    const result = await Notification.requestPermission();
-    return result as PushState;
+    const result = (await Notification.requestPermission()) as PushState;
+    if (result === "granted") await registerPushWorker();
+    return result;
   } catch {
     return "blocked-in-preview";
   }
@@ -62,20 +90,53 @@ export function showPush(opts: {
   playAlertSound(opts.urgent);
   if (typeof window === "undefined" || !("Notification" in window)) return;
   if (Notification.permission !== "granted") return;
-  try {
-    const notification = new Notification(opts.title, {
-      body: opts.body ?? undefined,
-      icon: "/favicon.ico",
-      badge: "/favicon.ico",
-      tag: opts.tag,
-      requireInteraction: opts.urgent,
-    });
-    notification.onclick = () => {
-      window.focus();
-      if (opts.link) window.location.href = opts.link;
-      notification.close();
+
+  void (async () => {
+    const registration = await registerPushWorker();
+    const payload = {
+      type: "healthfury-notify",
+      title: opts.title,
+      body: opts.body ?? null,
+      link: opts.link ?? null,
+      urgent: Boolean(opts.urgent),
+      tag: opts.tag ?? null,
     };
-  } catch {
-    /* notification construction can fail on some mobile browsers */
-  }
+
+    if (registration?.active) {
+      registration.active.postMessage(payload);
+      return;
+    }
+    if (registration) {
+      try {
+        await registration.showNotification(opts.title, {
+          body: opts.body ?? undefined,
+          icon: "/favicon.ico",
+          badge: "/favicon.ico",
+          tag: opts.tag,
+          requireInteraction: Boolean(opts.urgent),
+          data: { link: opts.link ?? "/dashboard" },
+        });
+        return;
+      } catch {
+        /* fall through to the plain notification */
+      }
+    }
+
+    try {
+      const notification = new Notification(opts.title, {
+        body: opts.body ?? undefined,
+        icon: "/favicon.ico",
+        badge: "/favicon.ico",
+        tag: opts.tag,
+        requireInteraction: opts.urgent,
+      });
+      notification.onclick = () => {
+        window.focus();
+        if (opts.link) window.location.href = opts.link;
+        notification.close();
+      };
+    } catch {
+      /* notification construction can fail on some mobile browsers */
+    }
+  })();
 }
