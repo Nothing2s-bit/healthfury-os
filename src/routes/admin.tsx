@@ -485,6 +485,102 @@ function AdminScanPage() {
               </div>
             )}
 
+            {/* Patient file pulled from the QR code */}
+            <div className="mt-4 rounded-xl border border-[oklch(0.85_0.08_80)] bg-[oklch(0.99_0.02_85)] p-3">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-[oklch(0.55_0.13_65)]" />
+                <h3 className="font-display text-sm font-bold uppercase tracking-wider text-[oklch(0.4_0.12_65)]">
+                  Patient File
+                </h3>
+              </div>
+              {result.file ? (
+                <>
+                  <div className="mt-2 flex gap-3">
+                    {result.photoUrl && (
+                      <img
+                        src={result.photoUrl}
+                        alt={`Patient photo of ${result.file.full_name}`}
+                        className="h-20 w-20 rounded-lg border border-[oklch(0.82_0.1_80)] object-cover"
+                      />
+                    )}
+                    <dl className="flex-1 grid gap-1 text-sm">
+                      <Row label="MRN" value={result.file.mrn} mono />
+                      <Row label="Name" value={result.file.full_name} />
+                      {result.file.date_of_birth && (
+                        <Row label="Date of birth" value={result.file.date_of_birth} />
+                      )}
+                      {result.file.sex && <Row label="Sex" value={result.file.sex} />}
+                      {result.file.phone && <Row label="Phone" value={result.file.phone} />}
+                    </dl>
+                  </div>
+                  <dl className="mt-1 grid gap-1 text-sm">
+                    <Row label="Status" value={result.file.status} />
+                    {result.file.condition && (
+                      <Row label="Condition" value={result.file.condition} />
+                    )}
+                    {result.file.chief_complaint && (
+                      <Row label="Complaint" value={result.file.chief_complaint} />
+                    )}
+                    <Row
+                      label="Vitals"
+                      value={[
+                        result.file.bp && `BP ${result.file.bp}`,
+                        result.file.hr && `HR ${result.file.hr}`,
+                        result.file.temp && `Temp ${result.file.temp}`,
+                        result.file.spo2 && `SpO₂ ${result.file.spo2}`,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || "Not recorded"}
+                    />
+                    <Row
+                      label="Allergies"
+                      value={result.file.allergies?.length ? result.file.allergies.join(", ") : "None recorded"}
+                    />
+                    <Row
+                      label="Medications"
+                      value={
+                        result.file.medications?.length
+                          ? result.file.medications.join(", ")
+                          : "None recorded"
+                      }
+                    />
+                  </dl>
+                  <Link
+                    to="/patients"
+                    className="mt-3 block rounded-lg border border-[oklch(0.82_0.1_80)] px-3 py-2 text-center text-xs uppercase tracking-wider text-[oklch(0.45_0.12_65)]"
+                  >
+                    Open full file
+                  </Link>
+                </>
+              ) : (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  No digital file yet for this patient. Create one on the patient records page.
+                </p>
+              )}
+            </div>
+
+            {result.history.length > 0 && (
+              <div className="mt-3">
+                <h3 className="font-display text-xs font-bold uppercase tracking-wider text-[oklch(0.4_0.12_65)]">
+                  Previous bookings
+                </h3>
+                <ul className="mt-1 space-y-1">
+                  {result.history.map((h) => (
+                    <li
+                      key={h.id}
+                      className="flex items-center justify-between gap-2 rounded-lg bg-white/70 px-2 py-1 text-[11px] text-[oklch(0.4_0.1_60)]"
+                    >
+                      <span className="font-mono">{h.reference_code}</span>
+                      <span>
+                        {h.department} · {h.appointment_date}
+                      </span>
+                      <StatusPill status={h.status} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <div className="mt-4 flex gap-2">
               <button
                 disabled={checking || result.booking.status === "checked_in"}
