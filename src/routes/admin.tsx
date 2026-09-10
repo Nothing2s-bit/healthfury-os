@@ -52,10 +52,32 @@ type BookingRow = {
   created_at: string;
 };
 
+type PatientFile = {
+  id: string;
+  mrn: string;
+  full_name: string;
+  date_of_birth: string | null;
+  sex: string | null;
+  phone: string | null;
+  chief_complaint: string | null;
+  condition: string | null;
+  status: string;
+  bp: string | null;
+  hr: string | null;
+  temp: string | null;
+  spo2: string | null;
+  allergies: string[];
+  medications: string[];
+  photo_path: string | null;
+};
+
 type Verified = {
   booking: BookingRow;
   clinicName: string;
   patientName: string;
+  file: PatientFile | null;
+  photoUrl: string | null;
+  history: BookingRow[];
 };
 
 function todayISO() {
