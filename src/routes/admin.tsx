@@ -186,7 +186,50 @@ function AdminScanPage() {
         } catch {
           /* ignore malformed payload */
         }
-        setResult({ booking: row, clinicName: clinic?.name ?? "Clinic", patientName });
+        // Pull the patient's digital file: by linked account first, then by name.
+        const fileCols =
+          "id,mrn,full_name,date_of_birth,sex,phone,chief_complaint,condition,status,bp,hr,temp,spo2,allergies,medications,photo_path";
+        let file: PatientFile | null = null;
+        const byId = await supabase
+          .from("patient_files")
+          .select(fileCols)
+          .eq("patient_id", row.patient_id)
+          .order("updated_at", { ascending: false })
+          .limit(1);
+        file = (byId.data?.[0] as PatientFile | undefined) ?? null;
+        if (!file && patientName !== "Patient") {
+          const byName = await supabase
+            .from("patient_files")
+            .select(fileCols)
+            .ilike("full_name", patientName)
+            .order("updated_at", { ascending: false })
+            .limit(1);
+          file = (byName.data?.[0] as PatientFile | undefined) ?? null;
+        }
+
+        let photoUrl: string | null = null;
+        if (file?.photo_path) {
+          const signed = await supabase.storage
+            .from("patient-photos")
+            .createSignedUrl(file.photo_path, 3600);
+          photoUrl = signed.data?.signedUrl ?? null;
+        }
+
+        const { data: history } = await supabase
+          .from("bookings")
+          .select("*")
+          .eq("patient_id", row.patient_id)
+          .order("appointment_date", { ascending: false })
+          .limit(6);
+
+        setResult({
+          booking: row,
+          clinicName: clinic?.name ?? "Clinic",
+          patientName: file?.full_name ?? patientName,
+          file,
+          photoUrl,
+          history: ((history ?? []) as BookingRow[]).filter((b) => b.id !== row.id),
+        });
         stopCamera();
       } catch (e) {
         setLookupError(e instanceof Error ? e.message : "Verification failed.");
