@@ -14,6 +14,7 @@ import {
   Search,
   ShieldCheck,
   Clock,
+  FileText,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
