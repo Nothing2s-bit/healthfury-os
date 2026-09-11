@@ -17,6 +17,7 @@ import { Route as PatientsRouteImport } from './routes/patients'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as LabRouteImport } from './routes/lab'
 import { Route as FlagRouteImport } from './routes/flag'
+import { Route as EmergencyRouteImport } from './routes/emergency'
 import { Route as DoctorRouteImport } from './routes/doctor'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -64,6 +65,11 @@ const LabRoute = LabRouteImport.update({
 const FlagRoute = FlagRouteImport.update({
   id: '/flag',
   path: '/flag',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmergencyRoute = EmergencyRouteImport.update({
+  id: '/emergency',
+  path: '/emergency',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DoctorRoute = DoctorRouteImport.update({
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/dashboard': typeof DashboardRoute
   '/doctor': typeof DoctorRoute
+  '/emergency': typeof EmergencyRoute
   '/flag': typeof FlagRoute
   '/lab': typeof LabRoute
   '/messages': typeof MessagesRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/dashboard': typeof DashboardRoute
   '/doctor': typeof DoctorRoute
+  '/emergency': typeof EmergencyRoute
   '/flag': typeof FlagRoute
   '/lab': typeof LabRoute
   '/messages': typeof MessagesRoute
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/dashboard': typeof DashboardRoute
   '/doctor': typeof DoctorRoute
+  '/emergency': typeof EmergencyRoute
   '/flag': typeof FlagRoute
   '/lab': typeof LabRoute
   '/messages': typeof MessagesRoute
@@ -172,6 +181,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/dashboard'
     | '/doctor'
+    | '/emergency'
     | '/flag'
     | '/lab'
     | '/messages'
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/dashboard'
     | '/doctor'
+    | '/emergency'
     | '/flag'
     | '/lab'
     | '/messages'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/dashboard'
     | '/doctor'
+    | '/emergency'
     | '/flag'
     | '/lab'
     | '/messages'
@@ -227,6 +239,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   DashboardRoute: typeof DashboardRoute
   DoctorRoute: typeof DoctorRoute
+  EmergencyRoute: typeof EmergencyRoute
   FlagRoute: typeof FlagRoute
   LabRoute: typeof LabRoute
   MessagesRoute: typeof MessagesRoute
@@ -296,6 +309,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FlagRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/emergency': {
+      id: '/emergency'
+      path: '/emergency'
+      fullPath: '/emergency'
+      preLoaderRoute: typeof EmergencyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/doctor': {
       id: '/doctor'
       path: '/doctor'
@@ -363,6 +383,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   DashboardRoute: DashboardRoute,
   DoctorRoute: DoctorRoute,
+  EmergencyRoute: EmergencyRoute,
   FlagRoute: FlagRoute,
   LabRoute: LabRoute,
   MessagesRoute: MessagesRoute,

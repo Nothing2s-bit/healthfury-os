@@ -43,7 +43,7 @@ const tiles = [
   { icon: Pill, label: "Pharmacy", to: "/stock", accent: "gold" as const },
   { icon: Syringe, label: "Vaccines", to: "/vaccines", accent: "gold" as const },
   { icon: MessageCircle, label: "Chat", to: "/messages", accent: "gold" as const },
-  { icon: Siren, label: "Emergency", to: "/scan", accent: "red" as const },
+  { icon: Siren, label: "Emergency", to: "/emergency", accent: "red" as const },
   { icon: FlaskConical, label: "Lab", to: "/lab", accent: "gold" as const },
   { icon: Video, label: "Telemedicine", to: "/messages", accent: "gold" as const },
   { icon: Sparkles, label: "AI TRIAGE", to: "/chat", accent: "gold" as const },
