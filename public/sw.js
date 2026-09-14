@@ -13,8 +13,8 @@ self.addEventListener("message", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title || "HealthFury", {
       body: data.body || undefined,
-      icon: "/favicon.ico",
-      badge: "/favicon.ico",
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
       tag: data.tag || undefined,
       renotify: Boolean(data.tag),
       requireInteraction: Boolean(data.urgent),
@@ -34,8 +34,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title || "HealthFury", {
       body: payload.body || undefined,
-      icon: "/favicon.ico",
-      badge: "/favicon.ico",
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
       requireInteraction: Boolean(payload.urgent),
       data: { link: payload.link || "/dashboard" },
     }),
