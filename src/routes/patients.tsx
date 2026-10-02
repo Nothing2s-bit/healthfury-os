@@ -112,6 +112,7 @@ function PatientsPage() {
   const [loading, setLoading] = useState(true);
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
+  const [qrCodes, setQrCodes] = useState<Record<string, string>>({});
   const [labOrders, setLabOrders] = useState<Record<string, LabRow[]>>({});
   const [sending, setSending] = useState(false);
   const shownRef = useRef<PatientFile[]>([]);
