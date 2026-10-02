@@ -4,7 +4,7 @@ import QRCode from "qrcode";
 import { supabase } from "@/integrations/supabase/client";
 import { HieroFrame } from "@/components/HieroFrame";
 import { AnkhLogo } from "@/components/AnkhLogo";
-import { FolderOpen, Loader2, Search, UserPlus, CalendarClock, Download, Send, Camera } from "lucide-react";
+import { FolderOpen, FlaskConical, Loader2, Search, UserPlus, CalendarClock, Download, Send, Camera } from "lucide-react";
 import { toCsv, downloadCsv, submitToDoh } from "@/lib/patient-export";
 
 export const Route = createFileRoute("/patients")({
@@ -52,6 +52,16 @@ type PatientFile = {
   photo_path: string | null;
   created_at: string;
   updated_at: string;
+};
+
+type LabRow = {
+  id: string;
+  test_name: string;
+  status: string;
+  result_summary: string | null;
+  result_flag: string | null;
+  resulted_at: string | null;
+  created_at: string;
 };
 
 type BookingRow = {
@@ -102,7 +112,7 @@ function PatientsPage() {
   const [loading, setLoading] = useState(true);
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
-  const [qrCodes, setQrCodes] = useState<Record<string, string>>({});
+  const [labOrders, setLabOrders] = useState<Record<string, LabRow[]>>({});
   const [sending, setSending] = useState(false);
   const shownRef = useRef<PatientFile[]>([]);
 
@@ -174,6 +184,14 @@ function PatientsPage() {
         });
       }
       setQrCodes((prev) => ({ ...prev, ...codes }));
+    }
+    if (next && !labOrders[file.id]) {
+      const { data: labs } = await supabase
+        .from("lab_orders")
+        .select("id,test_name,status,result_summary,result_flag,resulted_at,created_at")
+        .eq("patient_file_id", file.id)
+        .order("created_at", { ascending: false });
+      setLabOrders((prev) => ({ ...prev, [file.id]: (labs ?? []) as LabRow[] }));
     }
     if (next && file.photo_path && !photoUrls[file.id]) {
       const { data } = await supabase.storage
@@ -539,8 +557,36 @@ function PatientsPage() {
               <FolderOpen className="h-4 w-4" /> No patient files match this search.
             </li>
           )}
-        </ul>
-      </div>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h3 className="flex items-center gap-1 font-display text-[11px] font-bold uppercase tracking-wider text-[oklch(0.4_0.12_65)]">
+                      <FlaskConical className="h-3.5 w-3.5" /> Laboratory results
+                    </h3>
+                    {(labOrders[f.id]?.length ?? 0) === 0 && (
+                      <p className="text-xs text-muted-foreground">No lab results on record.</p>
+                    )}
+                    <ul className="mt-1 space-y-1">
+                      {(labOrders[f.id] ?? []).map((l) => (
+                        <li
+                          key={l.id}
+                          className="rounded-lg border border-[oklch(0.9_0.05_85)] bg-white/70 p-2 text-xs text-muted-foreground"
+                        >
+                          <strong>{l.test_name}</strong> · <span className="uppercase">{l.status}</span>
+                          {l.result_flag && l.result_flag !== "normal" && (
+                            <strong
+                              className={`ml-1 uppercase ${l.result_flag === "critical" ? "text-[oklch(0.5_0.19_25)]" : "text-[oklch(0.62_0.15_65)]"}`}
+                            >
+                              ({l.result_flag})
+                            </strong>
+                          )}
+                          {l.result_summary && <p className="mt-1 rounded bg-[oklch(0.96_0.04_85)] p-2">{l.result_summary}</p>}
+                          <p className="mt-1 text-[10px]">{new Date(l.resulted_at ?? l.created_at).toLocaleString("en-ZA")}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
     </HieroFrame>
   );
 }

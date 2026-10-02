@@ -50,6 +50,7 @@ type LabOrder = {
   status: string;
   ordered_by_name: string | null;
   result_summary: string | null;
+  result_flag: string | null;
   resulted_at: string | null;
   created_at: string;
 };
