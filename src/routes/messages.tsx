@@ -68,6 +68,7 @@ function MessagesPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [role, setRole] = useState<"patient" | "doctor" | "other" | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [unread, setUnread] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   const selectedId = search.c ?? null;
@@ -151,6 +152,45 @@ function MessagesPage() {
     };
   }, [userId]);
 
+  // Red unread bubbles: count messages from the other party not yet seen
+  useEffect(() => {
+    if (!userId || conversations.length === 0) return;
+    let active = true;
+    (async () => {
+      const counts: Record<string, number> = {};
+      await Promise.all(
+        conversations.map(async (c) => {
+          let seen = "";
+          try {
+            seen = localStorage.getItem(`hf-msg-seen-${c.id}`) ?? "";
+          } catch {
+            /* storage unavailable */
+          }
+          const { count } = await supabase
+            .from("messages")
+            .select("id", { count: "exact", head: true })
+            .eq("conversation_id", c.id)
+            .neq("sender_id", userId)
+            .gt("created_at", seen || "1970-01-01T00:00:00Z");
+          counts[c.id] = count ?? 0;
+        }),
+      );
+      if (active) setUnread(counts);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [userId, conversations]);
+
+  const markSeen = useCallback((conversationId: string, lastSeenAt: string) => {
+    try {
+      localStorage.setItem(`hf-msg-seen-${conversationId}`, lastSeenAt);
+    } catch {
+      /* storage unavailable */
+    }
+    setUnread((prev) => (prev[conversationId] === 0 ? prev : { ...prev, [conversationId]: 0 }));
+  }, []);
+
   const selected = useMemo(
     () => conversations.find((c) => c.id === selectedId) ?? null,
     [conversations, selectedId],
@@ -191,7 +231,12 @@ function MessagesPage() {
             role={role}
             conversations={conversations}
             userId={userId}
-            onOpen={(id) => navigate({ to: "/messages", search: { c: id } })}
+            unread={unread}
+            onOpen={(id) => {
+              const conv = conversations.find((c) => c.id === id);
+              markSeen(id, conv?.last_message_at ?? new Date().toISOString());
+              navigate({ to: "/messages", search: { c: id } });
+            }}
           />
         )}
 
@@ -200,6 +245,7 @@ function MessagesPage() {
             key={selected.id}
             conversation={selected}
             userId={userId}
+            markSeen={markSeen}
           />
         )}
       </div>
@@ -228,12 +274,14 @@ function ConversationList({
   role,
   conversations,
   userId,
+  unread,
   onOpen,
 }: {
   loading: boolean;
   role: "patient" | "doctor" | "other" | null;
   conversations: Conversation[];
   userId: string;
+  unread: Record<string, number>;
   onOpen: (id: string) => void;
 }) {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -290,7 +338,14 @@ function ConversationList({
                   {c.other_role} · {new Date(c.last_message_at).toLocaleString()}
                 </p>
               </div>
-              <ChevronLeft className="h-4 w-4 rotate-180 text-[oklch(0.6_0.15_65)]" />
+              <span className="flex items-center gap-2">
+                {(unread[c.id] ?? 0) > 0 && (
+                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[oklch(0.55_0.2_25)] px-1.5 text-[10px] font-bold text-white shadow">
+                    {unread[c.id] > 9 ? "9+" : unread[c.id]}
+                  </span>
+                )}
+                <ChevronLeft className="h-4 w-4 rotate-180 text-[oklch(0.6_0.15_65)]" />
+              </span>
             </button>
           ))}
         </div>
@@ -347,9 +402,11 @@ function ConversationList({
 function ConversationView({
   conversation,
   userId,
+  markSeen,
 }: {
   conversation: Conversation;
   userId: string;
+  markSeen: (conversationId: string, lastSeenAt: string) => void;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -398,8 +455,9 @@ function ConversationView({
   }, [conversation.id]);
 
   useEffect(() => {
+    if (messages.length) markSeen(conversation.id, messages[messages.length - 1].created_at);
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length]);
+  }, [conversation.id, messages.length]);
 
   return (
     <div className="mt-4">
