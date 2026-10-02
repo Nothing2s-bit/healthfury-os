@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { runLabOrderAnalysis } from "@/lib/lab.functions";
 import { HieroFrame } from "@/components/HieroFrame";
 import { AnkhLogo } from "@/components/AnkhLogo";
-import { FlaskConical, Loader2, Microscope, ClipboardList } from "lucide-react";
+import { FlaskConical, Loader2, Microscope, ClipboardList, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/lab")({
   head: () => ({
@@ -38,14 +39,18 @@ type LabTest = {
   notes: string | null;
 };
 
+type PatientFileMini = { id: string; full_name: string; mrn: string };
+
 type LabOrder = {
   id: string;
   patient_name: string;
+  patient_file_id: string | null;
   test_name: string;
   priority: string;
   status: string;
   ordered_by_name: string | null;
   result_summary: string | null;
+  result_flag: string | null;
   resulted_at: string | null;
   created_at: string;
 };
@@ -60,7 +65,9 @@ function LabPage() {
   const [tests, setTests] = useState<LabTest[]>([]);
   const [orders, setOrders] = useState<LabOrder[]>([]);
   const [dept, setDept] = useState("All");
-  const [form, setForm] = useState({ patient_name: "", test_id: "", priority: "routine" });
+  const [form, setForm] = useState({ patient_name: "", test_id: "", priority: "routine", file_id: "" });
+  const [files, setFiles] = useState<PatientFileMini[]>([]);
+  const [runningId, setRunningId] = useState<string | null>(null);
   const [result, setResult] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -69,16 +76,18 @@ function LabPage() {
   const isStaff = !!roles?.some((r) => STAFF_ROLES.includes(r));
 
   const load = useCallback(async () => {
-    const [{ data: t }, { data: o }] = await Promise.all([
+    const [{ data: t }, { data: o }, { data: f }] = await Promise.all([
       supabase.from("lab_tests").select("*").order("department").order("name"),
       supabase
         .from("lab_orders")
-        .select("id,patient_name,test_name,priority,status,ordered_by_name,result_summary,resulted_at,created_at")
+        .select("id,patient_name,patient_file_id,test_name,priority,status,ordered_by_name,result_summary,result_flag,resulted_at,created_at")
         .order("created_at", { ascending: false })
         .limit(60),
+      supabase.from("patient_files").select("id, full_name, mrn").order("full_name").limit(200),
     ]);
     setTests((t ?? []) as LabTest[]);
     setOrders((o ?? []) as LabOrder[]);
+    setFiles((f ?? []) as PatientFileMini[]);
   }, []);
 
   useEffect(() => {
@@ -138,6 +147,7 @@ function LabPage() {
     setMsg(null);
     const { error } = await supabase.from("lab_orders").insert({
       patient_name: form.patient_name.trim(),
+      patient_file_id: form.file_id || null,
       test_id: test.id,
       test_name: `${test.code} — ${test.name}`,
       priority: form.priority,
@@ -150,7 +160,7 @@ function LabPage() {
       setMsg(error.message);
       return;
     }
-    setForm({ patient_name: "", test_id: "", priority: "routine" });
+    setForm({ patient_name: "", test_id: "", priority: "routine", file_id: "" });
     setMsg("Lab order placed.");
     load();
   }
@@ -166,6 +176,20 @@ function LabPage() {
       })
       .eq("id", order.id);
     load();
+  }
+
+  async function runAnalysis(order: LabOrder) {
+    setRunningId(order.id);
+    setMsg(null);
+    try {
+      const out = await runLabOrderAnalysis({ data: { orderId: order.id } });
+      setMsg(`AI analysis released for ${order.patient_name} · notified ${out.notified} user(s).`);
+      load();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "AI lab analysis failed.");
+    } finally {
+      setRunningId(null);
+    }
   }
 
   if (loading) {
@@ -243,6 +267,18 @@ function LabPage() {
                     {t.code} — {t.name}
                   </option>
                 ))}
+            </select>
+            <select
+              value={form.file_id}
+              onChange={(e) => setForm({ ...form, file_id: e.target.value })}
+              className="rounded-lg border border-[oklch(0.82_0.1_80)] bg-white px-3 py-2 text-sm"
+            >
+              <option value="">Link patient file (optional)</option>
+              {files.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.full_name} · {f.mrn}
+                </option>
+              ))}
             </select>
             <select
               value={form.priority}
@@ -340,10 +376,25 @@ function LabPage() {
                   {o.ordered_by_name ? ` · ordered by ${o.ordered_by_name}` : ""}
                 </p>
                 {o.result_summary && (
-                  <p className="mt-1 rounded bg-[oklch(0.96_0.04_85)] p-2 text-xs">{o.result_summary}</p>
+                  <p className="mt-1 rounded bg-[oklch(0.96_0.04_85)] p-2 text-xs">
+                    {o.result_summary}
+                    {o.result_flag && o.result_flag !== "normal" && (
+                      <strong className={`ml-2 uppercase ${o.result_flag === "critical" ? "text-[oklch(0.5_0.19_25)]" : "text-[oklch(0.62_0.15_65)]"}`}>
+                        {o.result_flag}
+                      </strong>
+                    )}
+                  </p>
                 )}
                 {o.status !== "resulted" && (
                   <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => runAnalysis(o)}
+                      disabled={runningId === o.id}
+                      className="flex items-center gap-1 rounded-full border border-[oklch(0.55_0.12_155)] px-3 py-1 text-[11px] uppercase tracking-wider text-[oklch(0.4_0.1_155)] disabled:opacity-60"
+                    >
+                      {runningId === o.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                      AI analysis
+                    </button>
                     {o.status === "ordered" && (
                       <button
                         onClick={() => advance(o, "collected")}
