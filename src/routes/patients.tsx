@@ -549,17 +549,6 @@ function PatientsPage() {
                       ))}
                     </ul>
                   </div>
-                </div>
-              )}
-            </li>
-          ))}
-          {shown.length === 0 && (
-            <li className="flex items-center gap-2 text-xs text-muted-foreground">
-              <FolderOpen className="h-4 w-4" /> No patient files match this search.
-            </li>
-          )}
-                    </ul>
-                  </div>
 
                   <div>
                     <h3 className="flex items-center gap-1 font-display text-[11px] font-bold uppercase tracking-wider text-[oklch(0.4_0.12_65)]">
@@ -588,6 +577,17 @@ function PatientsPage() {
                       ))}
                     </ul>
                   </div>
+                </div>
+              )}
+            </li>
+          ))}
+          {shown.length === 0 && (
+            <li className="flex items-center gap-2 text-xs text-muted-foreground">
+              <FolderOpen className="h-4 w-4" /> No patient files match this search.
+            </li>
+          )}
+        </ul>
+      </div>
     </HieroFrame>
   );
 }
