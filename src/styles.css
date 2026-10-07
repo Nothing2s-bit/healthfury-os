@@ -74,15 +74,15 @@
 
 :root {
   --radius: 0.625rem;
-  /* HealthFury Egyptian palette */
-  --gold: oklch(0.78 0.14 82);
-  --gold-deep: oklch(0.6 0.15 65);
-  --gold-light: oklch(0.9 0.09 88);
-  --ivory: oklch(0.97 0.015 85);
-  --papyrus: oklch(0.93 0.03 80);
-  --crimson: oklch(0.5 0.19 25);
-  --jade: oklch(0.55 0.09 155);
-  --obsidian: oklch(0.15 0.01 60);
+  /* HealthFury Egyptian palette — 24K gold */
+  --gold: oklch(0.8 0.19 88);
+  --gold-deep: oklch(0.62 0.2 72);
+  --gold-light: oklch(0.93 0.13 95);
+  --ivory: oklch(0.97 0.03 90);
+  --papyrus: oklch(0.92 0.06 85);
+  --crimson: oklch(0.5 0.21 25);
+  --jade: oklch(0.55 0.11 155);
+  --obsidian: oklch(0.16 0.02 65);
 
   --background: var(--ivory);
   --foreground: var(--obsidian);
@@ -171,59 +171,61 @@
 }
 
 @utility text-gold-gradient {
-  background: linear-gradient(180deg, oklch(0.92 0.11 88) 0%, oklch(0.72 0.16 75) 45%, oklch(0.5 0.14 55) 100%);
+  background: linear-gradient(180deg, oklch(0.95 0.14 95) 0%, oklch(0.78 0.2 88) 40%, oklch(0.55 0.18 65) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
-  text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.35);
 }
 
 @utility bg-papyrus-texture {
   background-color: var(--color-ivory);
   background-image:
-    radial-gradient(ellipse at 20% 10%, oklch(0.92 0.05 85 / 0.6) 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 90%, oklch(0.9 0.06 78 / 0.5) 0%, transparent 55%),
-    repeating-linear-gradient(45deg, transparent 0 3px, oklch(0.88 0.04 82 / 0.15) 3px 4px);
+    radial-gradient(ellipse at 20% 10%, oklch(0.9 0.1 88 / 0.75) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 90%, oklch(0.88 0.11 82 / 0.65) 0%, transparent 55%),
+    radial-gradient(ellipse at 60% 40%, oklch(0.94 0.07 92 / 0.5) 0%, transparent 60%),
+    repeating-linear-gradient(45deg, transparent 0 3px, oklch(0.85 0.08 84 / 0.2) 3px 4px);
 }
 
 @utility bg-hieroglyph {
-  background-color: oklch(0.97 0.02 85);
+  background-color: oklch(0.96 0.04 88);
   background-image:
-    repeating-linear-gradient(0deg, transparent 0 22px, oklch(0.75 0.13 78 / 0.22) 22px 24px),
-    repeating-linear-gradient(90deg, transparent 0 18px, oklch(0.72 0.14 75 / 0.18) 18px 19px),
-    radial-gradient(circle at 12% 22%, oklch(0.7 0.14 72 / 0.28) 0 3px, transparent 4px),
-    radial-gradient(circle at 38% 55%, oklch(0.7 0.14 72 / 0.28) 0 3px, transparent 4px),
-    radial-gradient(circle at 68% 30%, oklch(0.7 0.14 72 / 0.28) 0 3px, transparent 4px),
-    radial-gradient(circle at 88% 78%, oklch(0.7 0.14 72 / 0.28) 0 3px, transparent 4px);
-  background-size: auto, auto, 96px 96px, 96px 96px, 96px 96px, 96px 96px;
+    radial-gradient(ellipse at 50% 0%, oklch(0.9 0.1 88 / 0.55) 0%, transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 22px, oklch(0.72 0.17 80 / 0.3) 22px 24px),
+    repeating-linear-gradient(90deg, transparent 0 18px, oklch(0.68 0.18 76 / 0.24) 18px 19px),
+    radial-gradient(circle at 12% 22%, oklch(0.66 0.18 74 / 0.38) 0 3px, transparent 4px),
+    radial-gradient(circle at 38% 55%, oklch(0.66 0.18 74 / 0.38) 0 3px, transparent 4px),
+    radial-gradient(circle at 68% 30%, oklch(0.66 0.18 74 / 0.38) 0 3px, transparent 4px),
+    radial-gradient(circle at 88% 78%, oklch(0.66 0.18 74 / 0.38) 0 3px, transparent 4px);
+  background-size: auto, auto, auto, 96px 96px, 96px 96px, 96px 96px, 96px 96px;
 }
 
 @utility bg-gold-bar {
   background:
-    linear-gradient(105deg, transparent 0 32%, oklch(1 0.02 95 / 0.72) 42%, transparent 52%),
+    linear-gradient(105deg, transparent 0 32%, oklch(1 0.05 98 / 0.85) 42%, transparent 52%),
     linear-gradient(180deg,
-      oklch(0.98 0.04 92) 0%,
-      oklch(0.88 0.16 85) 22%,
-      oklch(0.72 0.18 73) 52%,
-      oklch(0.53 0.15 60) 78%,
-      oklch(0.82 0.15 82) 100%);
+      oklch(0.99 0.07 96) 0%,
+      oklch(0.9 0.2 90) 22%,
+      oklch(0.74 0.21 78) 52%,
+      oklch(0.52 0.18 62) 78%,
+      oklch(0.85 0.19 86) 100%);
   box-shadow:
-    inset 0 -2px 0 oklch(0.42 0.12 55),
-    inset 0 2px 0 oklch(1 0.02 95 / 0.95),
-    inset 0 0 12px oklch(0.95 0.13 88 / 0.65),
-    0 3px 10px oklch(0.4 0.1 55 / 0.42);
+    inset 0 -2px 0 oklch(0.4 0.15 55),
+    inset 0 2px 0 oklch(1 0.05 98 / 0.98),
+    inset 0 0 14px oklch(0.96 0.16 92 / 0.75),
+    0 3px 12px oklch(0.42 0.13 58 / 0.5);
 }
 
 @utility ring-gold {
   box-shadow:
-    inset 0 0 0 2px oklch(0.98 0.12 92),
-    inset 0 0 0 4px oklch(0.65 0.17 68),
-    inset 0 0 0 6px oklch(0.96 0.09 88),
-    inset 0 0 18px oklch(1 0.05 95 / 0.72),
-    0 7px 20px -6px oklch(0.48 0.14 60 / 0.62),
-    0 2px 5px oklch(0 0 0 / 0.2),
-    0 0 12px oklch(0.84 0.16 82 / 0.38);
+    inset 0 0 0 2px oklch(0.99 0.15 96),
+    inset 0 0 0 4px oklch(0.64 0.2 70),
+    inset 0 0 0 6px oklch(0.97 0.12 92),
+    inset 0 0 20px oklch(1 0.07 98 / 0.8),
+    0 7px 22px -6px oklch(0.46 0.17 62 / 0.7),
+    0 2px 5px oklch(0 0 0 / 0.22),
+    0 0 16px oklch(0.85 0.2 86 / 0.5);
 }
 
 @utility ring-silver {
@@ -239,8 +241,8 @@
   isolation: isolate;
   overflow: hidden;
   background:
-    radial-gradient(circle at 31% 19%, oklch(1 0.01 95) 0 8%, oklch(0.98 0.08 91) 16%, transparent 38%),
-    linear-gradient(145deg, oklch(0.98 0.08 91) 0%, oklch(0.86 0.18 83) 30%, oklch(0.59 0.17 64) 68%, oklch(0.82 0.17 79) 100%);
+    radial-gradient(circle at 31% 19%, oklch(1 0.03 98) 0 8%, oklch(0.99 0.12 94) 16%, transparent 38%),
+    linear-gradient(145deg, oklch(0.99 0.12 94) 0%, oklch(0.87 0.21 87) 30%, oklch(0.58 0.2 66) 68%, oklch(0.84 0.2 82) 100%);
 
   &::before {
     content: "";
@@ -248,7 +250,7 @@
     inset: 8% 13% 52%;
     z-index: -1;
     border-radius: 9999px;
-    background: linear-gradient(180deg, oklch(1 0 0 / 0.9), oklch(1 0.04 92 / 0.08));
+    background: linear-gradient(180deg, oklch(1 0 0 / 0.95), oklch(1 0.06 95 / 0.1));
     filter: blur(1px);
     transform: rotate(-12deg);
   }
@@ -258,7 +260,7 @@
     position: absolute;
     inset: -35%;
     z-index: -1;
-    background: linear-gradient(105deg, transparent 38%, oklch(1 0 0 / 0.72) 48%, transparent 58%);
+    background: linear-gradient(105deg, transparent 38%, oklch(1 0 0 / 0.85) 48%, transparent 58%);
     transform: translateX(-65%) rotate(8deg);
     animation: gold-shimmer 4.5s ease-in-out infinite;
   }
