@@ -62,18 +62,24 @@ export function playAlertSound(urgent = false) {
     audioCtx = audioCtx ?? new Ctor();
     void audioCtx.resume();
     const now = audioCtx.currentTime;
-    const beeps = urgent ? [0, 0.22, 0.44] : [0];
-    beeps.forEach((offset) => {
-      const osc = audioCtx!.createOscillator();
-      const gain = audioCtx!.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(urgent ? 980 : 720, now + offset);
-      gain.gain.setValueAtTime(0.0001, now + offset);
-      gain.gain.exponentialRampToValueAtTime(0.18, now + offset + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.18);
-      osc.connect(gain).connect(audioCtx!.destination);
-      osc.start(now + offset);
-      osc.stop(now + offset + 0.2);
+    // Bell "ding-dong" chime; urgent alerts ring three times.
+    const notes: Array<[number, number]> = urgent
+      ? [[0, 1320], [0.25, 990], [0.5, 1320], [0.75, 990], [1.0, 1320]]
+      : [[0, 1320], [0.28, 990]];
+    notes.forEach(([offset, freq]) => {
+      [1, 2.76].forEach((harmonic, i) => {
+        const osc = audioCtx!.createOscillator();
+        const gain = audioCtx!.createGain();
+        osc.type = i === 0 ? "triangle" : "sine";
+        osc.frequency.setValueAtTime(freq * harmonic, now + offset);
+        const peak = i === 0 ? 0.35 : 0.08;
+        gain.gain.setValueAtTime(0.0001, now + offset);
+        gain.gain.exponentialRampToValueAtTime(peak, now + offset + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.9);
+        osc.connect(gain).connect(audioCtx!.destination);
+        osc.start(now + offset);
+        osc.stop(now + offset + 0.95);
+      });
     });
   } catch {
     /* audio is best-effort */
