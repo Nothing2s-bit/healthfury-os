@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import jsQR from "jsqr";
 import { supabase } from "@/integrations/supabase/client";
 import { HieroFrame } from "@/components/HieroFrame";
+import { AdminOverview } from "@/components/AdminOverview";
 import { AnkhLogo } from "@/components/AnkhLogo";
 import {
   QrCode,
@@ -369,8 +370,15 @@ function AdminScanPage() {
         <TopBar />
 
         <h1 className="mt-3 text-center font-display text-2xl font-bold tracking-wider text-gold-gradient">
-          VERIFY BOOKINGS
+          ADMIN COMMAND
         </h1>
+        <p className="text-center text-xs text-muted-foreground">
+          Shifts, bookings, patient files, lab results and stock — live.
+        </p>
+        {staffId && <AdminOverview userId={staffId} />}
+        <h2 className="mt-6 text-center font-display text-lg font-bold tracking-wider text-gold-gradient">
+          VERIFY BOOKINGS
+        </h2>
         <p className="text-center text-xs text-muted-foreground">
           Scan a patient's booking QR code at reception to confirm the visit.
         </p>
