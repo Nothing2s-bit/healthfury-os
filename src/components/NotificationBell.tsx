@@ -18,6 +18,7 @@ export function NotificationBell() {
   const [userId, setUserId] = useState<string | null>(null);
   const [items, setItems] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
+  const [balloons, setBalloons] = useState<Notification[]>([]);
 
   async function load(uid: string) {
     const { data } = await supabase
@@ -52,6 +53,8 @@ export function NotificationBell() {
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${uid}` }, (payload) => {
           const row = payload.new as Notification;
           setItems((current) => [row, ...current].slice(0, 30));
+          setBalloons((current) => [row, ...current].slice(0, 3));
+          window.setTimeout(() => setBalloons((current) => current.filter((b) => b.id !== row.id)), 7000);
           showPush({
             title: row.title,
             body: row.body,
@@ -84,6 +87,18 @@ export function NotificationBell() {
 
   return (
     <div className="relative">
+      <div className="pointer-events-none fixed right-3 top-16 z-[60] flex w-[min(20rem,calc(100vw-1.5rem))] flex-col gap-2">
+        {balloons.map((b) => (
+          <button
+            key={b.id}
+            onClick={() => { setBalloons((c) => c.filter((x) => x.id !== b.id)); setOpen(true); }}
+            className="pointer-events-auto animate-in slide-in-from-right rounded-2xl bg-[oklch(0.55_0.21_25)] px-4 py-3 text-left text-white shadow-[0_8px_24px_oklch(0.5_0.2_25/0.45)] ring-2 ring-white/70"
+          >
+            <p className="flex items-center gap-1.5 text-sm font-bold"><Bell className="h-4 w-4 animate-bounce" />{b.title}</p>
+            {b.body && <p className="mt-0.5 line-clamp-2 text-xs opacity-90">{b.body}</p>}
+          </button>
+        ))}
+      </div>
       <button aria-label="Open notifications" onClick={() => setOpen((value) => !value)} className="relative rounded-full border border-[oklch(0.72_0.14_75)] bg-white/80 p-2 text-[oklch(0.4_0.12_65)] shadow-sm">
         <Bell className="h-4 w-4" />
         {unread > 0 && <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-[oklch(0.5_0.19_25)] px-1 text-center text-[10px] font-bold text-white">{unread > 9 ? "9+" : unread}</span>}
