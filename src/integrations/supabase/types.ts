@@ -704,6 +704,36 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_shifts: {
+        Row: {
+          clock_in: string
+          clock_out: string | null
+          created_at: string
+          id: string
+          role: string | null
+          staff_name: string | null
+          user_id: string
+        }
+        Insert: {
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string
+          id?: string
+          role?: string | null
+          staff_name?: string | null
+          user_id: string
+        }
+        Update: {
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string
+          id?: string
+          role?: string | null
+          staff_name?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       stock_deliveries: {
         Row: {
           clinic_id: string | null
